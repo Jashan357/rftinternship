@@ -1,115 +1,89 @@
-#include <bits/stdc++.h>
+#include<bits/stdc++.h>
 using namespace std;
 
-class BankAccount {
+class BANKACCOUNT{
 private:
-    int accountNumber;
-    string holderName;
-    double balance;
-    const double MIN_BALANCE = 500; // minimum balance rule
+int BALANCE;
+int ACC_NUMBER;
+string HOLD_NAME;
 
 public:
-    // Constructor
-    BankAccount(int accNo, string name, double initialBalance) {
-        accountNumber = accNo;
-        holderName = name;
-        
-        if (initialBalance < MIN_BALANCE) {
-            cout << "Initial balance must be at least " << MIN_BALANCE << endl;
-            balance = MIN_BALANCE;
-        } else {
-            balance = initialBalance;
-        }
-    }
+BANKACCOUNT(string name,int acc_num,int init_balance){
+   ACC_NUMBER=acc_num;
+    HOLD_NAME= name;
+    BALANCE=init_balance;
+}
 
-    // Deposit function
-    void deposit(double amount) {
-        if (amount > 0) {
-            balance += amount;
-            cout << "Deposited: " << amount << endl;
-        } else {
-            cout << "Invalid deposit amount!" << endl;
-        }
-    }
+void Deposit(int dep_amnt){    //setter
+   BALANCE+=dep_amnt;
+}
 
-    // Withdraw function
-    void withdraw(double amount) {
-        if (amount <= 0) {
-            cout << "Invalid withdrawal amount!" << endl;
-        }
-        else if (balance - amount < MIN_BALANCE) {
-            cout << "Withdrawal denied! Minimum balance of " << MIN_BALANCE << " must be maintained." << endl;
-        }
-        else {
-            balance -= amount;
-            cout << "Withdrawn: " << amount << endl;
-        }
-    }
+void Withdraw(int req_amount){
+   if(BALANCE>=req_amount){
+     BALANCE=BALANCE-req_amount;
+    cout<<"amount withdrawl successful ,this remaining balance is:"<<BALANCE;
+   }
+   else{
+    cout<<"Transaction not possible";
+   }
+}
 
-    // Display balance
-    void displayBalance() {
-        cout << "\nAccount Details:\n";
-        cout << "Account Number: " << accountNumber << endl;
-        cout << "Holder Name: " << holderName << endl;
-        cout << "Balance: " << balance << endl;
-    }
+void DISPLAY_BALANCE(){
+    cout<<"current balance:"<<BALANCE;
+}
+
+
 };
 
-int main() {
-    int accNo;
-    string name;
-    double initialBalance;
+int main(){
+string name;
+int acc_num;
+int init_balance;
 
-    cout << "Enter Account Number: ";
-    cin >> accNo;
+cout<<"enter name:";
+getline(cin,name);
 
-    cin.ignore(); // to handle getline after cin
-    cout << "Enter Holder Name: ";
-    getline(cin, name);
+cout<<"account no. :-\n";
+cin>>acc_num;
 
-    cout << "Enter Initial Balance: ";
-    cin >> initialBalance;
+cout<<"enter initial balance:";
+cin>>init_balance;
 
-    BankAccount acc(accNo, name, initialBalance);
+BANKACCOUNT b(name,acc_num,init_balance);
 
-    int choice;
-    double amount;
+int choice;
+int amount;
+do{
+    cout<<"......../MENU/......"<<endl;
+    cout<<"1.deposit amount"<<endl;
+    cout<<"2.display balance"<<endl;
+    cout<<"3.withdraw money"<<endl;
+    cout<<"4. EXIT"<<endl;
 
-    do {
-        cout << "\n--- MENU ---\n";
-        cout << "1. Deposit\n";
-        cout << "2. Withdraw\n";
-        cout << "3. Display Balance\n";
-        cout << "4. Exit\n";
-        cout << "Enter choice: ";
-        cin >> choice;
-
-        switch (choice) {
-            case 1:
-                cout << "Enter amount to deposit: ";
-                cin >> amount;
-                acc.deposit(amount);
+    cout<<"enter from 1-4\n";
+cin>>choice;
+    switch(choice){
+        case 1: cout<<"enter amount to be deposit:";
+                cin>>amount;
+                b.Deposit(amount);
                 break;
 
-            case 2:
-                cout << "Enter amount to withdraw: ";
-                cin >> amount;
-                acc.withdraw(amount);
+        case 2: b.DISPLAY_BALANCE();
+                    break;
+
+        case 3: cout<<"enter amount to be withdrawl:";
+                cin>>amount;
+                b.Withdraw(amount);
                 break;
 
-            case 3:
-                acc.displayBalance();
+        case 4: cout<<"EXIT";
                 break;
 
-            case 4:
-                cout << "Exiting...\n";
-                break;
+          default:cout<<"INVALID INPUT";
+    }
+    
+}
+while(choice!=4);
 
-            default:
-                cout << "Invalid choice!\n";
-        }
-
-    } while (choice != 4);
-
-    return 0;
+return 0;
 }
