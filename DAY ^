@@ -1,0 +1,47 @@
+#include<bits/stdc++.h>
+using namespace std;
+
+//safe calculator
+int main(){
+int a,b;
+cout<<"enter a: \n";
+cin>>a;
+cout<<"enter b \n";
+cin>>b;
+//INPUT VALIDATION
+if(cin.fail()){
+    cout<<"invalid input \n";
+}
+label:
+int op;
+cout<<"enter operator number:\n";
+cout<<"1. add \n 2. substract \n 3. division \n 4. multiplication\n";
+cin>>op;
+switch(op){
+    case 1: cout<<"sum is:"<<a+b;
+          break;
+    case 2: cout<<"difference is:"<<a-b;
+            break;
+    case 3: try{
+        if(b==0){
+            throw "division by zero is not allowed";
+        }
+        else cout<<"division is:"<<a/b;
+    }
+     catch(const char &msg){
+        cout<<"error:"<<msg;
+     }
+     break;
+       case 4: cout<<"multiplication is:"<<a*b; 
+            break;
+        default:cout<<"invalid operator\n";
+        goto label;
+        }
+string ans;
+cout<<"\ndo u want  to perform the calculation again?\n please enter yes or no:  \n";
+cin>>ans;
+if(ans=="yes"){
+     goto label;
+}
+return 0;
+}
