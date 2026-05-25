@@ -1,0 +1,46 @@
+#include<bits/stdc++.h>
+using namespace std;
+
+class Atm{
+public:
+int balance;
+Atm(int balance){
+  this->balance=balance;
+}
+void check_balance(){
+  cout<<"Balance is:"<<balance;
+}
+void deposit(int money_inserted){
+  try{
+    if(money_inserted<0){
+    throw runtime_error("money can't be negative!!");
+  }
+  balance+=money_inserted;
+  }
+  catch(exception& e){
+    cout<<e.what();
+  }
+}
+
+void withdraw(int money_needed){
+try{
+  if(balance<money_needed){
+    throw runtime_error("not enough balance");
+  }
+  balance-=money_needed;
+}
+catch(exception& e){
+  cout<<e.what();
+}
+}
+
+};
+
+int main(){
+Atm a(1000);
+a.check_balance();
+a.deposit(100);
+a.check_balance();
+a.withdraw(200);
+a.check_balance();
+}
