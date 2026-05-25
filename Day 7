@@ -1,0 +1,42 @@
+#include<bits/stdc++.h>
+using namespace std;
+
+int main(){
+string user_name="jashangrover14@gmail.com";
+string pass_word="12345678";
+int num_attempts=0;
+while(num_attempts<3){
+
+  try{
+      
+string inp_user;
+string inp_pass;
+cout<<"enter username:\n";
+cin>>inp_user;
+cout<<"enter pass";
+cin>>inp_pass;
+if(inp_user.empty() || inp_pass.empty()){
+    throw runtime_error("fields can't be empty");
+}
+    if(inp_user!=user_name ){
+       throw runtime_error("invalid username! please try again");
+    }
+    if(inp_pass!=pass_word){
+        throw runtime_error("wrong password");
+    }
+    else{
+        cout<<"you have succcessfully logged in";
+        break;
+    }
+  }
+  catch(exception& e){
+    cout<<e.what()<<"\n";
+  } 
+  num_attempts++;
+}
+
+if(num_attempts>=3){
+    cout<<"you have raeched the number of attemts limit!! please try again after someimes";
+}
+return 0;
+}
