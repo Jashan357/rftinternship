@@ -1,0 +1,107 @@
+#include<bits/stdc++.h>
+using namespace std;
+
+class FileNotFound{
+public:
+
+    string msg(){
+        return "file not found";
+    }
+};
+
+class EmptyFile{
+public:
+
+    string msg(){
+        return "file is empty";
+    }
+};
+
+int main(){
+
+    try{
+
+        ifstream file("data.txt");
+
+        if(!file){
+            throw FileNotFound();
+        }
+
+        if(file.peek()==EOF){
+            throw EmptyFile();
+        }
+
+        string line;
+
+        int lines = 0;
+        int words = 0;
+        int characters = 0;
+
+        string longestword = "";
+
+        while(getline(file,line)){
+
+            lines++;
+
+            string temp = "";
+
+            for(auto ch : line){
+
+                // ignore punctuation
+                if(ispunct(ch)){
+                    continue;
+                }
+
+                // ignore case sensitivity
+                ch = tolower(ch);
+
+                characters++;
+
+                if(ch==' '){
+
+                    if(temp.length()>0){
+
+                        words++;
+
+                        if(temp.length() > longestword.length()){
+                            longestword = temp;
+                        }
+
+                        temp="";
+                    }
+                }
+
+                else{
+                    temp += ch;
+                }
+            }
+
+            // last word of line
+            if(temp.length()>0){
+
+                words++;
+
+                if(temp.length() > longestword.length()){
+                    longestword = temp;
+                }
+            }
+        }
+
+        cout<<"total lines:"<<lines<<endl;
+        cout<<"total words:"<<words<<endl;
+        cout<<"total characters:"<<characters<<endl;
+        cout<<"longest word:"<<longestword;
+
+        file.close();
+    }
+
+    catch(FileNotFound &e){
+        cout<<e.msg();
+    }
+
+    catch(EmptyFile &e){
+        cout<<e.msg();
+    }
+
+    return 0;
+}
