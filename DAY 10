@@ -1,0 +1,62 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+class WrongCredentials{
+  public:
+string msg(){
+  return "wrong credentials";
+}
+};
+
+class fileEmp{
+public:
+string emp_msg(){
+    return "file does not exist";
+}
+};
+
+class eofmsg{
+public:
+string eof_msg(){
+  return "no more data ";
+}
+};
+
+int main(){
+try{
+  ifstream file("userdata.txt");
+  if(!file){
+    throw fileEmp();
+  }
+  string inpname;
+  string inppass;
+  cout<<"enter uname:";
+  getline(cin,inpname);
+  cout<<"enter password:";
+  cin>>inppass;
+  string fname;
+  string fpass;
+  if(file.peek()==EOF){
+    throw eofmsg();
+  }
+  file>>fname;
+  if(file.peek()==EOF){
+    throw eofmsg();
+  }
+  file>>fpass;
+  if((inpname!=fname) || (inppass!=fpass)){
+    throw WrongCredentials();
+  }
+  cout<<"welcome"<<fname;
+}
+catch(WrongCredentials &e){
+  cout<<e.msg();
+}
+catch(fileEmp &a){
+  cout<<a.emp_msg();
+}
+catch(eofmsg& b){
+  cout<<b.eof_msg();
+}
+return 0;
+}
