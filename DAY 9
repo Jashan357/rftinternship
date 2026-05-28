@@ -1,0 +1,83 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+class Exalphaonly{
+    public:
+    string name_msg(){
+      return "enter alphabets only";
+    }
+};
+
+class invalid_age{
+      public:
+string age_msg(){
+  return "invalid age";
+}
+};
+
+class inv_marks{
+  public:
+  string marks_msg(){
+  return "invalid marks";
+  }
+};
+
+class Student{
+string name;
+int age;
+int marks;
+public:
+Student(string name,int age,int marks){
+  this->name=name;
+  this->age=age;
+  this->marks=marks;
+}
+void display(){
+cout<<"student name:"<<name<<endl;
+cout<<"age:"<<age<<endl;
+cout<<"marks:"<<marks<<endl;
+}
+};
+
+
+int main(){
+try{
+  string name;
+  int age;
+  int marks;
+  cout<<"enter name:";
+  getline(cin,name);
+  for(auto ch:name){
+    if(ch==' ')continue;
+    int c=(int)ch;  //ascci values
+    if((c<65 && c>90) || (c<97 && c>122)){
+      throw Exalphaonly();
+    }
+  }
+
+  cout<<"enter age:";
+  cin>>age;
+  if(age<5 || age>100){
+   throw  invalid_age();
+  }
+  cout<<"enter marks:";
+  cin>>marks;
+  if(marks<0 || marks>100){
+    throw inv_marks(); 
+  }
+  Student s(name,age,marks);
+  s.display();
+}
+
+catch(Exalphaonly &e){
+  cout<<e.name_msg();
+}
+catch(invalid_age &a){
+  cout<<a.age_msg();
+}
+catch(inv_marks &b){
+  cout<<b.marks_msg();
+}
+
+return 0;
+}
