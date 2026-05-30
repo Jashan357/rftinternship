@@ -1,0 +1,59 @@
+#include<bits/stdc++.h>
+using namespace std;
+
+
+class student{
+    public:
+    void add_student(string name,string roll_no){
+            ofstream file("ab.txt",ios::app);
+            if(!file){
+            cout<<"file not found";
+                return;
+            }
+            file<<roll_no<<" "<<name<<"\n";
+            cout<<"data entered successcully for roll no. : "<<roll_no<<endl;
+            file.close();
+    }
+
+    void view_data(){
+        ifstream file("ab.txt");
+        if(!file){
+            cout<<"file not found";
+                return;
+        }
+        file.seekg(0);
+        string ch;
+        while(getline(file,ch)){
+            cout<<ch<<" \n";
+        }
+        cout<<"\n data completely fetched out\n"<<endl;
+        file.close();
+    }
+    void searchby_roll(string roll_no){
+        ifstream file("ab.txt");
+        if(!file){
+            cout<<"file not found\n";
+                return;
+        }
+        string roll,name;
+while(file >> roll >> name){
+    if(roll == roll_no){
+        cout << "name of " << roll_no << " is " << name << endl;
+        return;
+    }
+}
+        file.close();
+    }
+};
+
+int main(){
+student s;
+s.add_student("jashan","1");
+s.add_student("harsh","2");
+s.add_student("abhishek","3");
+s.view_data();
+s.searchby_roll("2");
+s.searchby_roll("1");
+s.searchby_roll("3");
+return 0;
+}
