@@ -1,37 +1,28 @@
-#include <bits/stdc++.h>
-using namespace std;
 
-int main() {
-    ifstream file("ab.txt");
-    if (!file) {
-        cout << "File not found";
-        return 0;
+class student{
+    public:
+    void count_occ(string user_inp){
+        ifstream file("ab.txt");
+        if(!file){
+            cout<<"file not found\n";
+                return;
+        }
+        string ch;
+        int c=0;
+        vector<int> lines;
+        int line_no=1;
+while(getline(file,ch)){
+    if(ch == user_inp){
+        c++;
+        lines.push_back(line_no);
     }
-    string line;
-    int error_Count = 0;
-    int warning_Count = 0;
-    int info_Count = 0;
-    while (getline(file,line)) {
-        if (line.find("ERROR") == 0) {
-            error_Count++;
-        }
-        else if (line.find("WARNING") == 0) {
-            warning_Count++;
-        }
-        else if (line.find("INFO") == 0) {
-            info_Count++;
-        }
-    }
-    cout << "ERROR: " << error_Count << endl;
-    cout << "WARNING: " << warning_Count << endl;
-    cout << "INFO: " << info_Count << endl;
-    int mx = max({error_Count, warning_Count, info_Count});
-    cout << "Most Frequent Type: ";
-    if (mx == error_Count)
-        cout << "ERROR";
-    else if (mx == warning_Count)
-        cout << "WARNING";
-    else
-        cout << "INFO";
-    return 0;
+        line_no++;
 }
+    cout<<"number of occurence of "<<user_inp<<"is: "<<c<<" and the line number where they appears are: ";
+    for(auto it:lines){
+        cout<<it<<" ";
+    }
+
+        file.close();
+    }
+};
