@@ -1,0 +1,37 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+    ifstream file("ab.txt");
+    if (!file) {
+        cout << "File not found";
+        return 0;
+    }
+    string line;
+    int error_Count = 0;
+    int warning_Count = 0;
+    int info_Count = 0;
+    while (getline(file,line)) {
+        if (line.find("ERROR") == 0) {
+            error_Count++;
+        }
+        else if (line.find("WARNING") == 0) {
+            warning_Count++;
+        }
+        else if (line.find("INFO") == 0) {
+            info_Count++;
+        }
+    }
+    cout << "ERROR: " << error_Count << endl;
+    cout << "WARNING: " << warning_Count << endl;
+    cout << "INFO: " << info_Count << endl;
+    int mx = max({error_Count, warning_Count, info_Count});
+    cout << "Most Frequent Type: ";
+    if (mx == error_Count)
+        cout << "ERROR";
+    else if (mx == warning_Count)
+        cout << "WARNING";
+    else
+        cout << "INFO";
+    return 0;
+}
