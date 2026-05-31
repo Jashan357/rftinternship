@@ -1,0 +1,59 @@
+#include<bits/stdc++.h>
+using namespace std;
+
+class Stack{
+int* Array;
+int topind;
+int capacity;
+public:
+
+Stack(int siz){
+    capacity=siz;
+Array=new int[capacity];
+topind=-1;
+}
+
+~Stack(){
+    delete[] Array;
+}
+
+bool check_empty(){
+     return topind==-1;
+}
+
+void push_stack(int element){
+    if(topind>=capacity-1){
+        cout<<"stack overflow\n";
+        return ;
+    }
+    Array[++topind]=element;
+}
+
+int pop_stack(){
+    if(check_empty()){
+        cout<<"stack underflow \n";
+        return -1;
+    }
+    return Array[topind--];
+}
+
+int peek_stack(){
+     if(check_empty()){
+        cout<<"stack underflow \n";
+        return -1;
+    }
+    return Array[topind];
+}
+
+};
+
+int main(){
+Stack s(5);
+s.push_stack(10);
+s.push_stack(20);
+s.push_stack(30);
+cout<<"Top: "<<s.peek_stack()<<endl;
+cout<<"Popped: "<<s.pop_stack()<<endl;
+cout<<"Top: "<<s.peek_stack()<<endl;
+return 0;
+}
