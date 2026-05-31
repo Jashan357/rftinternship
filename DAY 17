@@ -1,0 +1,55 @@
+#include<bits/stdc++.h>
+using namespace std;
+
+class Contact{
+public:
+string name;
+long long number;
+};
+
+class cont{
+public:
+int t=-1;
+Contact arr[100];
+ void add_con(string name,long long number){
+    arr[++t].name=name;
+    arr[t].number=number;
+}
+
+void search_con(string name){
+    int f=0;
+    for(int i=0;i<=t;i++){
+        if(name==arr[i].name){
+            cout<<"phone no. of "<<name<<" is "<<arr[i].number<<"\n";
+            f=1;
+            break;
+        }
+    }
+    if(f==1)return;
+    cout<<"not found!";
+}
+
+void delete_con(string name){
+   int f=0;
+    for(int i=0;i<=t;i++){
+        if(name==arr[i].name){
+          arr[i].name=" ";
+          arr[i].number=-1;
+          cout<<"number has been deleted\n";
+            f=1;
+            break;
+        }
+    }
+    if(f==1)return;
+    cout<<"not found!";
+}
+};
+
+int main(){
+cont c;
+c.add_con("jashan",99929292);
+c.add_con("harsh",232989382);
+c.add_con("abho",2929292922);
+c.search_con("jashan");
+return 0;
+}
