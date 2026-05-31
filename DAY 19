@@ -1,0 +1,110 @@
+#include<bits/stdc++.h>
+using namespace std;
+
+class Stack {
+string* Array;
+int topind;
+int capacity;
+public:
+Stack(int siz) {
+capacity = siz;
+Array = new string[capacity];
+topind = -1;
+}
+~Stack() {
+delete[] Array;
+}
+bool check_empty() {
+return topind == -1;
+}
+void push_stack(string element) {
+if (topind >= capacity - 1) {
+cout << "stack overflow\n";
+return;
+}
+Array[++topind] = element;
+}
+string pop_stack() {
+if (check_empty()) {
+return "";
+}
+return Array[topind--];
+}
+string peek_stack() {
+if (check_empty()) {
+return "";
+}
+return Array[topind];
+}
+int size() {
+return topind + 1;
+}};
+
+class Browser {
+Stack back_stack;
+Stack forward_stack;
+string current_page;
+public:
+Browser(int max_history) : back_stack(max_history), forward_stack(max_history) {
+current_page = "";
+}
+
+void visit(string url) {
+if (current_page != "") {
+back_stack.push_stack(current_page);
+}
+current_page = url;
+while (!forward_stack.check_empty()) {
+forward_stack.pop_stack();
+}
+cout <<"visited:"<<current_page<< endl;
+}
+
+void go_back() {
+if (back_stack.check_empty()) {
+cout << "  [Back] Nothing to go back to.\n";
+return;
+}
+forward_stack.push_stack(current_page);
+current_page = back_stack.pop_stack();
+cout << "  Back to : " << current_page << endl;
+}
+
+void go_forward() {
+if (forward_stack.check_empty()) {
+cout << "  [Forward] Nothing to go forward to.\n";
+return;
+}
+back_stack.push_stack(current_page);
+current_page = forward_stack.pop_stack();
+cout << "  Forward : " << current_page << endl;
+}
+
+void status() {
+cout << "Current : " << current_page << endl;
+cout << "  Back    : " << back_stack.size() << " page(s) in history" << endl;
+cout << "  Forward : " << forward_stack.size() << " page(s) ahead\n" << endl;
+}};
+
+int main(){
+Browser b(10);
+cout << "visiting Pages\n";
+b.visit("google.com");
+b.visit("youtube.com");
+b.visit("github.com");
+b.visit("stackoverflow.com");
+b.status();
+cout << "Going Back\n";
+b.go_back();
+b.go_back();
+b.status();
+cout << "going forward ===\n";
+b.go_forward();
+b.status();
+ cout << "visiting New Page\n";
+ b.visit("reddit.com");
+ b.status();
+cout<<"Try Forward\n";
+b.go_forward();
+return 0;
+}
