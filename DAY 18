@@ -1,0 +1,85 @@
+#include<bits/stdc++.h>
+using namespace std;
+
+class Stack{
+int* Array;
+int topind;
+int capacity;
+public:
+
+Stack(int siz){
+    capacity=siz;
+Array=new int[capacity];
+topind=-1;
+}
+
+~Stack(){
+    delete[] Array;
+}
+
+bool check_empty(){
+     return topind==-1;
+}
+
+void push_stack(int element){
+    if(topind>=capacity-1){
+        cout<<"stack overflow\n";
+        return ;
+    }
+    Array[++topind]=element;
+}
+
+int pop_stack(){
+    if(check_empty()){
+        cout<<"stack underflow \n";
+        return -1;
+    }
+    return Array[topind--];
+}
+
+int peek_stack(){
+     if(check_empty()){
+        cout<<"stack underflow \n";
+        return -1;
+    }
+    return Array[topind];
+}
+
+int arith_op(char ch){
+    int b=pop_stack();
+    int a=pop_stack();
+    if(ch == '+'){
+     push_stack(b + a);
+}
+else if(ch == '-'){
+   push_stack(a-b);
+}
+else if(ch == '*'){
+   push_stack(b * a);
+}
+else if(ch == '/'){
+   push_stack(a / b);
+}
+}
+
+int res_exp(string expression){
+    for(auto it:expression){
+        if(isdigit(it)){
+            push_stack(it- '0');
+        }
+        else if(it=='+' || it=='-' || it=='*' || it=='/'){
+            arith_op(it);
+            }
+    }
+}
+
+};
+
+
+
+int main(){
+Stack s(20);
+s.res_exp("23*54*+9-");
+cout<<"result:"<<s.peek_stack();
+return 0;
+}
