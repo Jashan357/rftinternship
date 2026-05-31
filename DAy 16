@@ -1,0 +1,75 @@
+#include<bits/stdc++.h>
+using namespace std;
+
+class Queue{
+int* Array;
+int start, end;
+int currSize, maxSize;
+public:
+Queue(){
+Array=new int[1000];
+start = -1;
+end = -1;
+currSize = 0;
+maxSize = 1000;
+}
+~Queue(){
+delete[] Array;
+}
+void push(int x){
+if (currSize==maxSize) {
+cout << "Queue is full\n" << endl;
+exit(1);
+}
+if (end == -1) {
+start = 0;
+end = 0;
+} 
+else {
+end = (end + 1) % maxSize;}
+Array[end] = x;
+currSize++;
+}
+
+int pop() {
+if (start == -1) {
+cout << "Queue Empty\nExiting..." << endl;
+exit(1);
+}
+
+int popped = Array[start];
+if (currSize == 1) {
+start = -1;
+end = -1;
+}
+else {
+start = (start + 1) % maxSize;
+}
+currSize--;
+return popped;
+}
+    
+int peek() {
+if (start == -1) {
+cout << "Queue is Empty" << endl;
+exit(1);
+}
+return Array[start];
+}
+bool isEmpty() {
+return (currSize == 0);
+}
+};
+
+int main(){
+Queue q;
+
+q.push(10);
+q.push(20);
+q.push(30);
+
+cout<<q.pop()<<endl;
+cout<<q.peek()<<endl;
+
+return 0;
+}
