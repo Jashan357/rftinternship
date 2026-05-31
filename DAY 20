@@ -1,0 +1,172 @@
+#include<bits/stdc++.h>
+using namespace std;
+
+class Shop{
+public:
+string item[100];
+int qty[100];
+int total_items=0;
+int total_price=0;
+
+void buy_item(){
+int d,i;
+
+cout<<"1.Parle G(5)\n";
+cout<<"2.Namkeen Biscuit(4)\n";
+cout<<"3.Coconut Biscuit(4)\n";
+cout<<"4.Hajmola(1)\n";
+cout<<"5.Mitthi Toffee(1)\n";
+cout<<"6.Aam Toffee(50)\n";
+cout<<"7.Kaccha Aam Toffee(50)\n";
+
+cout<<"enter choice:";
+cin>>d;
+
+cout<<"enter quantity:";
+cin>>i;
+
+switch(d){
+case 1:
+item[total_items]="Parle G";
+qty[total_items]=i;
+total_price+=i*5;
+total_items++;
+break;
+
+case 2:
+item[total_items]="Namkeen Biscuit";
+qty[total_items]=i;
+total_price+=i*4;
+total_items++;
+break;
+
+case 3:
+item[total_items]="Coconut Biscuit";
+qty[total_items]=i;
+total_price+=i*4;
+total_items++;
+break;
+
+case 4:
+item[total_items]="Hajmola";
+qty[total_items]=i;
+total_price+=i;
+total_items++;
+break;
+
+case 5:
+item[total_items]="Mitthi Toffee";
+qty[total_items]=i;
+total_price+=i;
+total_items++;
+break;
+
+case 6:
+item[total_items]="Aam Toffee";
+qty[total_items]=i;
+total_price+=i*50;
+total_items++;
+break;
+
+case 7:
+item[total_items]="Kaccha Aam Toffee";
+qty[total_items]=i;
+total_price+=i*50;
+total_items++;
+break;
+
+default:
+cout<<"wrong choice\n";
+}
+}
+
+void show_bill(){
+cout<<"\n------BILL------\n";
+
+for(int i=0;i<total_items;i++){
+cout<<item[i]<<" Qty:"<<qty[i]<<endl;
+}
+
+cout<<"total price:"<<total_price<<endl;
+}
+
+void save_bill(){
+ofstream file("bill.txt");
+
+if(!file){
+cout<<"file not found\n";
+return;
+}
+
+file<<"------BILL------\n";
+
+for(int i=0;i<total_items;i++){
+file<<item[i]<<" Qty:"<<qty[i]<<endl;
+}
+
+file<<"total price:"<<total_price<<endl;
+
+file.close();
+
+cout<<"bill saved successfully\n";
+}
+
+void view_saved_bill(){
+ifstream file("bill.txt");
+
+if(!file){
+cout<<"file not found\n";
+return;
+}
+
+string line;
+
+while(getline(file,line)){
+cout<<line<<endl;
+}
+
+file.close();
+}
+};
+
+int main(){
+Shop s;
+int choice;
+
+while(true){
+cout<<"\n1.Buy Item\n";
+cout<<"2.Show Bill\n";
+cout<<"3.Save Bill\n";
+cout<<"4.View Saved Bill\n";
+cout<<"5.Exit\n";
+
+cout<<"enter choice:";
+cin>>choice;
+
+switch(choice){
+case 1:
+s.buy_item();
+break;
+
+case 2:
+s.show_bill();
+break;
+
+case 3:
+s.save_bill();
+break;
+
+case 4:
+s.view_saved_bill();
+break;
+
+case 5:
+cout<<"thank you\n";
+return 0;
+
+default:
+cout<<"wrong choice\n";
+}
+}
+  return 0;
+}
