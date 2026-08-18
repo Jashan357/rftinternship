@@ -1,0 +1,36 @@
+#include<bits/stdc++.h>
+using namespace std;
+
+void f1(int a ,int b){ //value
+    int t=a;
+    a=b;
+    b=t;
+
+}
+
+void f2(int &a,int &b){  //reference
+    int t=a;
+    a=b;
+    b=t;
+
+}
+
+int f3(vector<int> v){  //second largest
+int largest = INT_MIN;
+int SecondLar= INT_MIN;
+for( auto it:v){
+    if(it> largest){
+         SecondLar = largest;
+        largest = it;
+    }
+    else if( SecondLar < it){
+                SecondLar = it;
+    }
+}
+return SecondLar;
+}
+
+int main(){
+
+return 0;
+}
