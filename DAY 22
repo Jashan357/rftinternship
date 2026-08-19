@@ -1,0 +1,557 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+// ---------------- Book ----------------
+class Book {  // it will store the name, author of book and also the availability of book
+
+protected:
+
+    string name;
+
+    string author;
+
+    bool avail;
+
+public:
+
+    Book(string name, string author, bool avail = true) {
+
+        this->name = name;
+
+        this->author = author;
+
+        this->avail = avail;
+
+    }
+
+    virtual void display() {
+
+        cout << "Name: " << name
+             << " | Author: " << author
+             << " | Status: " << (avail ? "Available" : "Issued")
+             << endl;
+
+    }
+
+    string getName() {
+        return name;
+    }
+
+    string getAuthor() {
+        return author;
+    }
+
+    bool getAvail() {
+        return avail;
+    }
+
+    void issueBook() {
+        avail = false;
+    }
+
+    void returnBook() {
+        avail = true;
+    }
+
+    virtual string getType() {
+        return "Book";
+    }
+
+    virtual ~Book() {}
+
+};
+
+
+// ---------------- Inheritance + Polymorphism ----------------
+class PhysicalBook : public Book {
+
+public:
+
+    PhysicalBook(string name, string author, bool avail = true)
+        : Book(name, author, avail) {
+    }
+
+    void display() override {
+
+        cout << "[Physical Book] ";
+
+        Book::display();
+
+    }
+
+    string getType() override {
+        return "PhysicalBook";
+    }
+
+};
+
+
+// ---------------- Login ----------------
+// when we enter our UIET library, they ask for name and roll number
+class Login {
+
+string name;
+
+string Password;
+
+public:
+
+    Login(string name, string Password) {
+
+        this->name = name;
+
+        this->Password = Password;
+
+    }
+
+    bool verifying(string enteredName, string enteredPassword) {
+
+        return (name == enteredName && Password == enteredPassword);
+
+    }
+
+};
+
+
+// ---------------- Searching ----------------
+class Searching {  // this will search the Book class for the required book
+
+public:
+
+    // name and author match || only name matches ? found : not found
+
+    static void searchByName(vector<Book*>& All_books, string name) {
+
+        bool found = false;
+
+        for(auto b : All_books) {
+
+            if(b->getName().find(name) != string::npos) {
+
+                b->display();
+
+                found = true;
+
+            }
+
+        }
+
+        if(!found) {
+
+            cout << "No book found with that name." << endl;
+
+        }
+
+    }
+
+
+    static void searchByAuthor(vector<Book*>& All_books, string author) {
+
+        bool found = false;
+
+        for(auto b : All_books) {
+
+            if(b->getAuthor().find(author) != string::npos) {
+
+                b->display();
+
+                found = true;
+
+            }
+
+        }
+
+        if(!found) {
+
+            cout << "No book found by that author." << endl;
+
+        }
+
+    }
+
+
+    static Book* findByName(vector<Book*>& All_books, string name) {
+
+        for(auto b : All_books) {
+
+            if(b->getName() == name) {
+
+                return b;
+
+            }
+
+        }
+
+        return nullptr;
+
+    }
+
+};
+
+
+// ---------------- Issue ----------------
+class Issue {  // it will put avail parameter to not available
+
+public:
+
+    void issueBook(vector<Book*>& All_books, string name) {
+
+        Book* b = Searching::findByName(All_books, name);
+
+        if(b == nullptr) {
+
+            cout << "Book not found." << endl;
+
+            return;
+
+        }
+
+        if(!b->getAvail()) {
+
+            cout << "Book already issued." << endl;
+
+            return;
+
+        }
+
+        b->issueBook();
+
+        cout << "Book issued successfully." << endl;
+
+    }
+
+
+    void returnBook(vector<Book*>& All_books, string name) {
+
+        Book* b = Searching::findByName(All_books, name);
+
+        if(b == nullptr) {
+
+            cout << "Book not found." << endl;
+
+            return;
+
+        }
+
+        if(b->getAvail()) {
+
+            cout << "Book was not issued." << endl;
+
+            return;
+
+        }
+
+        b->returnBook();
+
+        cout << "Book returned successfully." << endl;
+
+    }
+
+};
+
+
+// ---------------- File Handling ----------------
+class FileHandling {
+
+public:
+
+    void saveData(vector<Book*>& All_books) {
+
+        ofstream file("books.txt");
+
+        if(!file) {
+
+            cout << "File could not be opened." << endl;
+
+            return;
+
+        }
+
+        for(auto b : All_books) {
+
+            file << b->getType() << endl;
+            file << b->getName() << endl;
+            file << b->getAuthor() << endl;
+            file << b->getAvail() << endl;
+
+        }
+
+        file.close();
+
+        cout << "Data saved successfully." << endl;
+
+    }
+
+
+    void loadData(vector<Book*>& All_books) {
+
+        ifstream file("books.txt");
+
+        if(!file) {
+
+            return;
+
+        }
+
+        string type;
+
+        string name;
+
+        string author;
+
+        bool avail;
+
+        while(getline(file, type)) {
+
+            if(!getline(file, name))
+                break;
+
+            if(!getline(file, author))
+                break;
+
+            if(!(file >> avail))
+                break;
+
+            file.ignore(numeric_limits<streamsize>::max(), '\n');
+
+            Book* b;
+
+            if(type == "PhysicalBook") {
+
+                b = new PhysicalBook(name, author, avail);
+
+            }
+            else {
+
+                b = new Book(name, author, avail);
+
+            }
+
+            All_books.push_back(b);
+
+        }
+
+        file.close();
+
+    }
+
+};
+
+
+int main() {
+
+    vector<Book*> All_books;
+
+    vector<Login*> Login_data;
+
+
+    // seed a login so verifying() has something to check against
+    Login_data.push_back(new Login("Jashan", "12345"));
+
+
+    Issue issueDesk;
+
+    FileHandling file;
+
+
+    // load old books from file
+    file.loadData(All_books);
+
+
+    int choice;
+
+    do {
+
+        cout << "\n===== LIBRARY SYSTEM =====" << endl;
+
+        cout << "1. Add Book" << endl;
+
+        cout << "2. Display All Books" << endl;
+
+        cout << "3. Search by Name" << endl;
+
+        cout << "4. Search by Author" << endl;
+
+        cout << "5. Issue Book" << endl;
+
+        cout << "6. Return Book" << endl;
+
+        cout << "7. Verify Login" << endl;
+
+        cout << "8. Save Data" << endl;
+
+        cout << "9. Exit" << endl;
+
+        cout << "Enter choice: ";
+
+        cin >> choice;
+
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+
+        if(choice == 1) {
+
+            string name, author;
+
+            cout << "Enter Name: ";
+
+            getline(cin, name);
+
+            cout << "Enter Author: ";
+
+            getline(cin, author);
+
+            All_books.push_back(new PhysicalBook(name, author));
+
+            cout << "Book added successfully." << endl;
+
+        }
+
+
+        else if(choice == 2) {
+
+            if(All_books.empty()) {
+
+                cout << "No books available." << endl;
+
+            }
+
+            else {
+
+                for(auto b : All_books) {
+
+                    b->display();
+
+                }
+
+            }
+
+        }
+
+
+        else if(choice == 3) {
+
+            string name;
+
+            cout << "Enter name to search: ";
+
+            getline(cin, name);
+
+            Searching::searchByName(All_books, name);
+
+        }
+
+
+        else if(choice == 4) {
+
+            string author;
+
+            cout << "Enter author to search: ";
+
+            getline(cin, author);
+
+            Searching::searchByAuthor(All_books, author);
+
+        }
+
+
+        else if(choice == 5) {
+
+            string name;
+
+            cout << "Enter book name: ";
+
+            getline(cin, name);
+
+            issueDesk.issueBook(All_books, name);
+
+        }
+
+
+        else if(choice == 6) {
+
+            string name;
+
+            cout << "Enter book name: ";
+
+            getline(cin, name);
+
+            issueDesk.returnBook(All_books, name);
+
+        }
+
+
+        else if(choice == 7) {
+
+            string name, pass;
+
+            cout << "Enter name: ";
+
+            getline(cin, name);
+
+            cout << "Enter password: ";
+
+            getline(cin, pass);
+
+            bool ok = false;
+
+            for(auto l : Login_data) {
+
+                if(l->verifying(name, pass)) {
+
+                    ok = true;
+
+                    break;
+
+                }
+
+            }
+
+            cout << (ok ? "Login successful." : "Invalid credentials.") << endl;
+
+        }
+
+
+        else if(choice == 8) {
+
+            file.saveData(All_books);
+
+        }
+
+
+        else if(choice == 9) {
+
+            file.saveData(All_books);
+
+            cout << "Program ended." << endl;
+
+        }
+
+
+        else {
+
+            cout << "Invalid choice." << endl;
+
+        }
+
+
+    } while(choice != 9);
+
+
+    for(auto b : All_books) {
+
+        delete b;
+
+    }
+
+
+    for(auto l : Login_data) {
+
+        delete l;
+
+    }
+
+
+    return 0;
+
+}
