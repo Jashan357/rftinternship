@@ -1,0 +1,660 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+// ================= PATIENT CLASS =================
+
+class Patient{
+
+public:
+
+    int id;
+    string name;
+    int age;
+    string disease;
+    string doctor;
+    bool admitted;
+    double totalBill;
+
+    Patient(){}
+
+    Patient(int id,string name,int age,string disease){
+        this->id=id;
+        this->name=name;
+        this->age=age;
+        this->disease=disease;
+        doctor="Not Assigned";
+        admitted=false;
+        totalBill=0;
+    }
+};
+
+
+// ================= HOSPITAL CLASS =================
+
+class Hospital{
+
+private:
+    vector<Patient> patients;
+    // Normal appointments work on FIFO
+    queue<int> appointments;
+    // Higher priority patient comes first
+    priority_queue<pair<int,int>> emergencies;
+    // Check if input is valid
+    int getNumber(){
+        int num;
+        while(true){
+            cin>>num;
+            if(cin.fail()){
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(),'\n');
+                cout<<"Invalid Input! Enter a number: ";
+            }
+            else{
+                cin.ignore(numeric_limits<streamsize>::max(),'\n');
+                return num;
+            }
+        }
+    }
+
+    // Find patient by ID
+    int findPatient(int id){
+        for(int i=0;i<patients.size();i++){
+            if(patients[i].id==id) return i;
+        }
+        return -1;
+    }
+public:
+
+    // ================= SAVE DATA =================
+
+    void saveToFile(){
+        ofstream file("patients.txt");
+        if(!file){
+            cout<<"Error opening file!\n";
+            return;
+        }
+        for(const Patient& p:patients){
+            file<<p.id<<"|"
+                <<p.name<<"|"
+                <<p.age<<"|"
+                <<p.disease<<"|"
+                <<p.doctor<<"|"
+                <<p.admitted<<"|"
+                <<p.totalBill<<"\n";
+        }
+        file.close();
+    }
+
+    // ================= LOAD DATA =================
+
+    void loadFromFile(){
+        ifstream file("patients.txt");
+        if(!file) return;
+        string line;
+        while(getline(file,line)){
+            stringstream ss(line);
+            vector<string> info;
+            string data;
+            while(getline(ss,data,'|')){
+                info.push_back(data);
+            }
+            // Check if file data is complete
+            if(info.size()!=7) continue;
+            try{
+                Patient p;
+                p.id=stoi(info[0]);
+                p.name=info[1];
+                p.age=stoi(info[2]);
+                p.disease=info[3];
+                p.doctor=info[4];
+                p.admitted=stoi(info[5]);
+                p.totalBill=stod(info[6]);
+
+                patients.push_back(p);
+
+            }
+            catch(...){
+
+                // Skip corrupted record
+                cout<<"Skipping corrupted patient record!\n";
+
+            }
+
+        }
+
+        file.close();
+
+    }
+
+
+    // ================= REGISTER PATIENT =================
+
+    void registerPatient(){
+
+        int id,age;
+        string name,disease;
+
+        cout<<"\nEnter Patient ID: ";
+        id=getNumber();
+
+
+        if(findPatient(id)!=-1){
+
+            cout<<"Patient ID already exists!\n";
+            return;
+
+        }
+
+
+        cout<<"Enter Name: ";
+        getline(cin,name);
+
+
+        cout<<"Enter Age: ";
+        age=getNumber();
+
+
+        if(age<=0){
+
+            cout<<"Invalid Age!\n";
+            return;
+
+        }
+
+
+        cout<<"Enter Disease: ";
+        getline(cin,disease);
+
+
+        patients.push_back(Patient(id,name,age,disease));
+
+        saveToFile();
+
+        cout<<"\nPatient Registered Successfully!\n";
+
+    }
+
+
+    // ================= ASSIGN DOCTOR =================
+
+    void assignDoctor(){
+
+        int id;
+
+        cout<<"\nEnter Patient ID: ";
+        id=getNumber();
+
+
+        int index=findPatient(id);
+
+        if(index==-1){
+
+            cout<<"Patient Not Found!\n";
+            return;
+
+        }
+
+
+        cout<<"Enter Doctor Name: ";
+        getline(cin,patients[index].doctor);
+
+
+        saveToFile();
+
+        cout<<"Doctor Assigned Successfully!\n";
+
+    }
+
+
+    // ================= ADMIT PATIENT =================
+
+    void admitPatient(){
+
+        int id;
+
+        cout<<"\nEnter Patient ID: ";
+        id=getNumber();
+
+
+        int index=findPatient(id);
+
+        if(index==-1){
+
+            cout<<"Patient Not Found!\n";
+            return;
+
+        }
+
+
+        if(patients[index].admitted){
+
+            cout<<"Patient is already admitted!\n";
+            return;
+
+        }
+
+
+        patients[index].admitted=true;
+
+        saveToFile();
+
+        cout<<"Patient Admitted Successfully!\n";
+
+    }
+
+
+    // ================= DISCHARGE PATIENT =================
+
+    void dischargePatient(){
+
+        int id;
+
+        cout<<"\nEnter Patient ID: ";
+        id=getNumber();
+
+
+        int index=findPatient(id);
+
+        if(index==-1){
+
+            cout<<"Patient Not Found!\n";
+            return;
+
+        }
+
+
+        if(!patients[index].admitted){
+
+            cout<<"Patient is not admitted!\n";
+            return;
+
+        }
+
+
+        patients[index].admitted=false;
+
+        saveToFile();
+
+        cout<<"Patient Discharged Successfully!\n";
+
+    }
+
+
+    // ================= SEARCH PATIENT =================
+
+    void searchPatient(){
+
+        int id;
+
+        cout<<"\nEnter Patient ID: ";
+        id=getNumber();
+
+
+        int index=findPatient(id);
+
+        if(index==-1){
+
+            cout<<"Patient Not Found!\n";
+            return;
+
+        }
+
+
+        Patient& p=patients[index];
+
+        cout<<"\n========== PATIENT RECORD ==========\n";
+
+        cout<<"ID       : "<<p.id<<endl;
+        cout<<"Name     : "<<p.name<<endl;
+        cout<<"Age      : "<<p.age<<endl;
+        cout<<"Disease  : "<<p.disease<<endl;
+        cout<<"Doctor   : "<<p.doctor<<endl;
+        cout<<"Status   : "<<(p.admitted ? "Admitted":"Not Admitted")<<endl;
+        cout<<"Bill     : Rs. "<<p.totalBill<<endl;
+
+    }
+
+
+    // ================= DISPLAY PATIENTS =================
+
+    void displayPatients(){
+
+        if(patients.empty()){
+
+            cout<<"\nNo Patient Records Found!\n";
+            return;
+
+        }
+
+
+        cout<<"\n========== ALL PATIENTS ==========\n";
+
+
+        for(const Patient& p:patients){
+
+            cout<<"\nID       : "<<p.id;
+            cout<<"\nName     : "<<p.name;
+            cout<<"\nAge      : "<<p.age;
+            cout<<"\nDisease  : "<<p.disease;
+            cout<<"\nDoctor   : "<<p.doctor;
+            cout<<"\nStatus   : "<<(p.admitted ? "Admitted":"Not Admitted");
+            cout<<"\nBill     : Rs. "<<p.totalBill;
+
+            cout<<"\n------------------------------\n";
+
+        }
+
+    }
+
+
+    // ================= BILLING MODULE =================
+
+    void generateBill(){
+
+        int id;
+
+        cout<<"\nEnter Patient ID: ";
+        id=getNumber();
+
+
+        int index=findPatient(id);
+
+        if(index==-1){
+
+            cout<<"Patient Not Found!\n";
+            return;
+
+        }
+
+
+        double treatmentCost,medicineCost,roomCost;
+
+        cout<<"Enter Treatment Cost: ";
+        treatmentCost=getNumber();
+
+        cout<<"Enter Medicine Cost: ";
+        medicineCost=getNumber();
+
+        cout<<"Enter Room Cost: ";
+        roomCost=getNumber();
+
+
+        if(treatmentCost<0 || medicineCost<0 || roomCost<0){
+
+            cout<<"Cost cannot be negative!\n";
+            return;
+
+        }
+
+
+        double total=treatmentCost+medicineCost+roomCost;
+
+
+        // Store bill permanently
+        patients[index].totalBill+=total;
+
+        saveToFile();
+
+
+        cout<<"\n========== HOSPITAL BILL ==========\n";
+
+        cout<<"Patient   : "<<patients[index].name<<endl;
+        cout<<"Treatment : Rs. "<<treatmentCost<<endl;
+        cout<<"Medicine  : Rs. "<<medicineCost<<endl;
+        cout<<"Room      : Rs. "<<roomCost<<endl;
+
+        cout<<"------------------------------\n";
+
+        cout<<"New Bill  : Rs. "<<total<<endl;
+        cout<<"Total Due : Rs. "<<patients[index].totalBill<<endl;
+
+    }
+
+
+    // ================= BOOK APPOINTMENT =================
+
+    void bookAppointment(){
+
+        int id;
+
+        cout<<"\nEnter Patient ID: ";
+        id=getNumber();
+
+
+        if(findPatient(id)==-1){
+
+            cout<<"Patient Not Found! Register first.\n";
+            return;
+
+        }
+
+
+        appointments.push(id);
+
+        cout<<"Appointment Added Successfully!\n";
+
+    }
+
+
+    // ================= NEXT APPOINTMENT =================
+
+    void nextAppointment(){
+
+        if(appointments.empty()){
+
+            cout<<"\nNo Appointments!\n";
+            return;
+
+        }
+
+
+        int id=appointments.front();
+
+        appointments.pop();
+
+
+        int index=findPatient(id);
+
+
+        // Safety check
+        if(index==-1){
+
+            cout<<"Patient record no longer exists!\n";
+            return;
+
+        }
+
+
+        cout<<"\nNext Patient: "<<patients[index].name<<endl;
+
+    }
+
+
+    // ================= ADD EMERGENCY =================
+
+    void addEmergency(){
+
+        int id,priority;
+
+        cout<<"\nEnter Patient ID: ";
+        id=getNumber();
+
+
+        if(findPatient(id)==-1){
+
+            cout<<"Patient Not Found!\n";
+            return;
+
+        }
+
+
+        cout<<"Enter Emergency Priority (1-10): ";
+        priority=getNumber();
+
+
+        if(priority<1 || priority>10){
+
+            cout<<"Priority must be between 1 and 10!\n";
+            return;
+
+        }
+
+
+        emergencies.push({priority,id});
+
+        cout<<"Emergency Patient Added!\n";
+
+    }
+
+
+    // ================= TREAT EMERGENCY =================
+
+    void treatEmergency(){
+
+        if(emergencies.empty()){
+
+            cout<<"\nNo Emergency Patients!\n";
+            return;
+
+        }
+
+
+        int id=emergencies.top().second;
+        int priority=emergencies.top().first;
+
+        emergencies.pop();
+
+
+        int index=findPatient(id);
+
+
+        // Safety check
+        if(index==-1){
+
+            cout<<"Patient record no longer exists!\n";
+            return;
+
+        }
+
+
+        cout<<"\n========== EMERGENCY PATIENT ==========\n";
+
+        cout<<"Patient : "<<patients[index].name<<endl;
+        cout<<"Priority: "<<priority<<endl;
+
+    }
+
+};
+
+
+
+// ================= MAIN FUNCTION =================
+
+int main(){
+
+    Hospital hospital;
+
+
+    // Load previous patient records
+    hospital.loadFromFile();
+
+
+    int choice;
+
+
+    do{
+
+        cout<<"\n\n========== HOSPITAL MANAGEMENT SYSTEM ==========\n";
+
+        cout<<"1. Register Patient\n";
+        cout<<"2. Assign Doctor\n";
+        cout<<"3. Admit Patient\n";
+        cout<<"4. Discharge Patient\n";
+        cout<<"5. Search Patient\n";
+        cout<<"6. Display All Patients\n";
+        cout<<"7. Generate Bill\n";
+        cout<<"8. Book Appointment\n";
+        cout<<"9. Next Appointment\n";
+        cout<<"10. Add Emergency Patient\n";
+        cout<<"11. Treat Emergency Patient\n";
+        cout<<"0. Exit\n";
+
+
+        cout<<"\nEnter Your Choice: ";
+        choice=0;
+
+
+        // Input validation for menu
+        while(!(cin>>choice)){
+
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(),'\n');
+
+            cout<<"Invalid Input! Enter Your Choice: ";
+
+        }
+
+        cin.ignore(numeric_limits<streamsize>::max(),'\n');
+
+
+        switch(choice){
+
+            case 1:
+                hospital.registerPatient();
+                break;
+
+            case 2:
+                hospital.assignDoctor();
+                break;
+
+            case 3:
+                hospital.admitPatient();
+                break;
+
+            case 4:
+                hospital.dischargePatient();
+                break;
+
+            case 5:
+                hospital.searchPatient();
+                break;
+
+            case 6:
+                hospital.displayPatients();
+                break;
+
+            case 7:
+                hospital.generateBill();
+                break;
+
+            case 8:
+                hospital.bookAppointment();
+                break;
+
+            case 9:
+                hospital.nextAppointment();
+                break;
+
+            case 10:
+                hospital.addEmergency();
+                break;
+
+            case 11:
+                hospital.treatEmergency();
+                break;
+
+            case 0:
+                cout<<"\nThank You For Using The System!\n";
+                break;
+
+            default:
+                cout<<"\nInvalid Choice!\n";
+
+        }
+
+    }while(choice!=0);
+
+
+    return 0;
+
+}
