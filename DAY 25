@@ -1,0 +1,583 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+class Passenger{
+public:
+    string name;
+    int age;
+    string gender;
+    Passenger(){}
+
+    Passenger(string name,int age,string gender){
+        this->name = name;
+        this->age = age;
+        this->gender = gender;
+    }
+};
+
+class Train{
+public:
+    int trainNo;
+    string trainName;
+    string source;
+    string destination;
+    int totalSeats;
+    int availableSeats;
+    int fare;
+
+    Train(){}
+
+    Train(int trainNo,string trainName,string source,string destination,
+          int totalSeats,int fare){
+
+        this->trainNo = trainNo;
+        this->trainName = trainName;
+        this->source = source;
+        this->destination = destination;
+        this->totalSeats = totalSeats;
+        this->availableSeats = totalSeats;
+        this->fare = fare;
+    }
+};
+
+
+class Ticket{
+public:
+    int pnr;
+    Passenger passenger;
+    int trainNo;
+    int seatNo;
+    string status;
+
+    Ticket(){}
+};
+
+
+class RailwayReservationSystem{
+public:
+
+    vector<Train> trains;
+    vector<Ticket> tickets;
+    queue<Passenger> waitingList;
+
+    int nextPNR = 1001;
+
+
+    void saveTrains(){
+
+        ofstream file("trains.txt");
+
+        for(int i = 0;i < trains.size();i++){
+
+            file << trains[i].trainNo << endl;
+            file << trains[i].trainName << endl;
+            file << trains[i].source << endl;
+            file << trains[i].destination << endl;
+            file << trains[i].totalSeats << endl;
+            file << trains[i].availableSeats << endl;
+            file << trains[i].fare << endl;
+        }
+
+        file.close();
+    }
+
+
+    void loadTrains(){
+
+        ifstream file("trains.txt");
+
+        if(!file){
+            return;
+        }
+
+        while(true){
+
+            Train t;
+
+            if(!(file >> t.trainNo)){
+                break;
+            }
+
+            file.ignore();
+
+            getline(file,t.trainName);
+            getline(file,t.source);
+            getline(file,t.destination);
+
+            file >> t.totalSeats;
+            file >> t.availableSeats;
+            file >> t.fare;
+
+            trains.push_back(t);
+        }
+
+        file.close();
+    }
+
+
+    void saveTickets(){
+
+        ofstream file("tickets.txt");
+
+        for(int i = 0;i < tickets.size();i++){
+
+            file << tickets[i].pnr << endl;
+            file << tickets[i].passenger.name << endl;
+            file << tickets[i].passenger.age << endl;
+            file << tickets[i].passenger.gender << endl;
+            file << tickets[i].trainNo << endl;
+            file << tickets[i].seatNo << endl;
+            file << tickets[i].status << endl;
+        }
+
+        file.close();
+    }
+
+
+    int findTrain(int trainNo){
+
+        for(int i = 0;i < trains.size();i++){
+
+            if(trains[i].trainNo == trainNo){
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+
+    int findTicket(int pnr){
+
+        for(int i = 0;i < tickets.size();i++){
+
+            if(tickets[i].pnr == pnr){
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+
+    void addTrain(){
+
+        Train t;
+
+        cout << "\nEnter Train Number: ";
+        cin >> t.trainNo;
+
+        if(findTrain(t.trainNo) != -1){
+            cout << "Train already exists\n";
+            return;
+        }
+
+        cin.ignore();
+
+        cout << "Enter Train Name: ";
+        getline(cin,t.trainName);
+
+        cout << "Enter Source: ";
+        getline(cin,t.source);
+
+        cout << "Enter Destination: ";
+        getline(cin,t.destination);
+
+        cout << "Enter Total Seats: ";
+        cin >> t.totalSeats;
+
+        t.availableSeats = t.totalSeats;
+
+        cout << "Enter Fare: ";
+        cin >> t.fare;
+
+        trains.push_back(t);
+
+        saveTrains();
+
+        cout << "\nTrain Added Successfully\n";
+    }
+
+
+    void showTrains(){
+
+        if(trains.size() == 0){
+            cout << "\nNo Trains Available\n";
+            return;
+        }
+
+        cout << "\n---------- AVAILABLE TRAINS ----------\n";
+
+        for(int i = 0;i < trains.size();i++){
+
+            cout << "\nTrain Number: " << trains[i].trainNo;
+            cout << "\nTrain Name: " << trains[i].trainName;
+            cout << "\nRoute: " << trains[i].source
+                 << " -> " << trains[i].destination;
+            cout << "\nAvailable Seats: " << trains[i].availableSeats;
+            cout << "\nFare: Rs. " << trains[i].fare << endl;
+        }
+    }
+
+
+    Passenger registerPassenger(){
+
+        Passenger p;
+
+        cin.ignore();
+
+        cout << "\nEnter Passenger Name: ";
+        getline(cin,p.name);
+
+        cout << "Enter Age: ";
+        cin >> p.age;
+
+        cout << "Enter Gender: ";
+        cin >> p.gender;
+
+        return p;
+    }
+
+
+    void checkSeatAvailability(){
+
+        int trainNo;
+
+        cout << "\nEnter Train Number: ";
+        cin >> trainNo;
+
+        int index = findTrain(trainNo);
+
+        if(index == -1){
+            cout << "Train Not Found\n";
+            return;
+        }
+
+        cout << "\nAvailable Seats: "
+             << trains[index].availableSeats << endl;
+
+        cout << "Total Seats: "
+             << trains[index].totalSeats << endl;
+    }
+
+
+    void calculateFare(){
+
+        int trainNo;
+
+        cout << "\nEnter Train Number: ";
+        cin >> trainNo;
+
+        int index = findTrain(trainNo);
+
+        if(index == -1){
+            cout << "Train Not Found\n";
+            return;
+        }
+
+        cout << "\nFare for this Train: Rs. "
+             << trains[index].fare << endl;
+    }
+
+
+    void bookTicket(){
+
+        int trainNo;
+
+        cout << "\nEnter Train Number: ";
+        cin >> trainNo;
+
+        int index = findTrain(trainNo);
+
+        if(index == -1){
+            cout << "Train Not Found\n";
+            return;
+        }
+
+        Passenger p = registerPassenger();
+
+
+        if(trains[index].availableSeats == 0){
+
+            waitingList.push(p);
+
+            cout << "\nNo Seats Available\n";
+            cout << "Passenger Added to Waiting List\n";
+
+            return;
+        }
+
+
+        Ticket t;
+
+        t.pnr = nextPNR++;
+        t.passenger = p;
+        t.trainNo = trainNo;
+
+        t.seatNo = trains[index].totalSeats
+                   - trains[index].availableSeats + 1;
+
+        t.status = "CONFIRMED";
+
+        trains[index].availableSeats--;
+
+        tickets.push_back(t);
+
+        saveTrains();
+        saveTickets();
+
+        cout << "\n========== TICKET BOOKED ==========\n";
+        cout << "PNR Number: " << t.pnr << endl;
+        cout << "Passenger: " << t.passenger.name << endl;
+        cout << "Train Number: " << t.trainNo << endl;
+        cout << "Seat Number: " << t.seatNo << endl;
+        cout << "Status: " << t.status << endl;
+        cout << "Fare: Rs. " << trains[index].fare << endl;
+    }
+
+
+    void searchPNR(){
+
+        int pnr;
+
+        cout << "\nEnter PNR Number: ";
+        cin >> pnr;
+
+        int index = findTicket(pnr);
+
+        if(index == -1){
+            cout << "Ticket Not Found\n";
+            return;
+        }
+
+        Ticket t = tickets[index];
+
+        cout << "\n========== TICKET DETAILS ==========\n";
+        cout << "PNR: " << t.pnr << endl;
+        cout << "Passenger: " << t.passenger.name << endl;
+        cout << "Age: " << t.passenger.age << endl;
+        cout << "Gender: " << t.passenger.gender << endl;
+        cout << "Train Number: " << t.trainNo << endl;
+        cout << "Seat Number: " << t.seatNo << endl;
+        cout << "Status: " << t.status << endl;
+    }
+
+
+    void cancelTicket(){
+
+        int pnr;
+
+        cout << "\nEnter PNR Number: ";
+        cin >> pnr;
+
+        int ticketIndex = findTicket(pnr);
+
+        if(ticketIndex == -1){
+            cout << "Ticket Not Found\n";
+            return;
+        }
+
+        int trainIndex = findTrain(tickets[ticketIndex].trainNo);
+
+
+        if(trainIndex != -1){
+
+            trains[trainIndex].availableSeats++;
+        }
+
+
+        cout << "\nTicket Cancelled Successfully\n";
+
+        tickets.erase(tickets.begin() + ticketIndex);
+
+
+        if(!waitingList.empty() && trainIndex != -1){
+
+            Passenger p = waitingList.front();
+            waitingList.pop();
+
+            Ticket t;
+
+            t.pnr = nextPNR++;
+            t.passenger = p;
+            t.trainNo = trains[trainIndex].trainNo;
+
+            t.seatNo = trains[trainIndex].totalSeats
+                       - trains[trainIndex].availableSeats + 1;
+
+            t.status = "CONFIRMED";
+
+            trains[trainIndex].availableSeats--;
+
+            tickets.push_back(t);
+
+            cout << "\nPassenger from Waiting List Confirmed\n";
+            cout << "New PNR: " << t.pnr << endl;
+            cout << "Passenger: " << p.name << endl;
+        }
+
+        saveTrains();
+        saveTickets();
+    }
+
+
+    void showWaitingList(){
+
+        if(waitingList.empty()){
+
+            cout << "\nWaiting List is Empty\n";
+            return;
+        }
+
+        queue<Passenger> temp = waitingList;
+
+        cout << "\n---------- WAITING LIST ----------\n";
+
+        int no = 1;
+
+        while(!temp.empty()){
+
+            Passenger p = temp.front();
+            temp.pop();
+
+            cout << no << ". " << p.name
+                 << " | Age: " << p.age
+                 << " | Gender: " << p.gender << endl;
+
+            no++;
+        }
+    }
+
+
+    void adminPanel(){
+
+        string password;
+
+        cout << "\nEnter Admin Password: ";
+        cin >> password;
+
+        if(password != "admin123"){
+
+            cout << "Wrong Password\n";
+            return;
+        }
+
+        int choice = -1;
+
+        while(choice != 0){
+
+            cout << "\n========== ADMIN PANEL ==========\n";
+            cout << "1. Add Train\n";
+            cout << "2. Show All Trains\n";
+            cout << "3. Show Waiting List\n";
+            cout << "0. Exit Admin Panel\n";
+
+            cout << "Enter Choice: ";
+            cin >> choice;
+
+
+            if(choice == 1){
+                addTrain();
+            }
+
+            else if(choice == 2){
+                showTrains();
+            }
+
+            else if(choice == 3){
+                showWaitingList();
+            }
+
+            else if(choice == 0){
+                cout << "Exiting Admin Panel...\n";
+            }
+
+            else{
+                cout << "Invalid Choice\n";
+            }
+        }
+    }
+
+
+    void start(){
+
+        loadTrains();
+
+        int choice = -1;
+
+        while(choice != 0){
+
+            cout << "\n\n====================================";
+            cout << "\n   RAILWAY RESERVATION SYSTEM";
+            cout << "\n====================================\n";
+
+            cout << "1. Admin Panel\n";
+            cout << "2. Show Trains\n";
+            cout << "3. Book Ticket\n";
+            cout << "4. Cancel Ticket\n";
+            cout << "5. Check Seat Availability\n";
+            cout << "6. Calculate Fare\n";
+            cout << "7. Search Ticket by PNR\n";
+            cout << "8. Show Waiting List\n";
+            cout << "0. Exit\n";
+
+            cout << "\nEnter Your Choice: ";
+            cin >> choice;
+
+
+            if(choice == 1){
+                adminPanel();
+            }
+
+            else if(choice == 2){
+                showTrains();
+            }
+
+            else if(choice == 3){
+                bookTicket();
+            }
+
+            else if(choice == 4){
+                cancelTicket();
+            }
+
+            else if(choice == 5){
+                checkSeatAvailability();
+            }
+
+            else if(choice == 6){
+                calculateFare();
+            }
+
+            else if(choice == 7){
+                searchPNR();
+            }
+
+            else if(choice == 8){
+                showWaitingList();
+            }
+
+            else if(choice == 0){
+
+                saveTrains();
+                saveTickets();
+
+                cout << "\nThank You for Using Railway Reservation System\n";
+            }
+
+            else{
+                cout << "\nInvalid Choice\n";
+            }
+        }
+    }
+};
+
+
+int main(){
+
+    RailwayReservationSystem obj;
+
+    obj.start();
+
+    return 0;
+}
