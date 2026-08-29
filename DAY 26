@@ -1,0 +1,747 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+
+// ================= CUSTOMER CLASS =================
+
+class Customer {
+public:
+
+    int id;
+    string name;
+    string phone;
+    string address;
+
+    Customer() {}
+
+    Customer(int id, string name, string phone, string address) {
+        this->id = id;
+        this->name = name;
+        this->phone = phone;
+        this->address = address;
+    }
+};
+
+
+// ================= PARCEL CLASS =================
+
+class Parcel {
+public:
+
+    string trackingId;
+    int customerId;
+
+    string sender;
+    string receiver;
+
+    string source;
+    string destination;
+
+    double weight;
+    double charges;
+
+    string deliveryType;
+    string status;
+
+    Parcel() {}
+
+    Parcel(string trackingId, int customerId, string sender,
+           string receiver, string source, string destination,
+           double weight, double charges,
+           string deliveryType, string status) {
+
+        this->trackingId = trackingId;
+        this->customerId = customerId;
+        this->sender = sender;
+        this->receiver = receiver;
+        this->source = source;
+        this->destination = destination;
+        this->weight = weight;
+        this->charges = charges;
+        this->deliveryType = deliveryType;
+        this->status = status;
+    }
+};
+
+
+// ================= GLOBAL DATA =================
+
+vector<Customer> customers;
+vector<Parcel> parcels;
+
+
+// ================= CUSTOMER ID =================
+
+int getCustomerId() {
+
+    if (customers.size() == 0)
+        return 1;
+
+    return customers.back().id + 1;
+}
+
+
+// ================= TRACKING ID =================
+
+string getTrackingId() {
+
+    int number = parcels.size() + 1001;
+
+    return "TRK" + to_string(number);
+}
+
+
+// ================= SAVE CUSTOMERS =================
+
+void saveCustomers() {
+
+    ofstream file("customers.txt");
+
+    for (auto c : customers) {
+
+        file << c.id << endl;
+        file << c.name << endl;
+        file << c.phone << endl;
+        file << c.address << endl;
+    }
+
+    file.close();
+}
+
+
+// ================= LOAD CUSTOMERS =================
+
+void loadCustomers() {
+
+    ifstream file("customers.txt");
+
+    if (!file)
+        return;
+
+    Customer c;
+
+    while (file >> c.id) {
+
+        file.ignore();
+
+        getline(file, c.name);
+        getline(file, c.phone);
+        getline(file, c.address);
+
+        customers.push_back(c);
+    }
+
+    file.close();
+}
+
+
+// ================= SAVE PARCELS =================
+
+void saveParcels() {
+
+    ofstream file("parcels.txt");
+
+    for (auto p : parcels) {
+
+        file << p.trackingId << endl;
+        file << p.customerId << endl;
+        file << p.sender << endl;
+        file << p.receiver << endl;
+        file << p.source << endl;
+        file << p.destination << endl;
+        file << p.weight << endl;
+        file << p.charges << endl;
+        file << p.deliveryType << endl;
+        file << p.status << endl;
+    }
+
+    file.close();
+}
+
+
+// ================= LOAD PARCELS =================
+
+void loadParcels() {
+
+    ifstream file("parcels.txt");
+
+    if (!file)
+        return;
+
+    Parcel p;
+
+    while (getline(file, p.trackingId)) {
+
+        file >> p.customerId;
+        file.ignore();
+
+        getline(file, p.sender);
+        getline(file, p.receiver);
+        getline(file, p.source);
+        getline(file, p.destination);
+
+        file >> p.weight;
+        file >> p.charges;
+        file.ignore();
+
+        getline(file, p.deliveryType);
+        getline(file, p.status);
+
+        parcels.push_back(p);
+    }
+
+    file.close();
+}
+
+
+// ================= REGISTER CUSTOMER =================
+
+void registerCustomer() {
+
+    string name;
+    string phone;
+    string address;
+
+    cin.ignore();
+
+    cout << "\nEnter Customer Name: ";
+    getline(cin, name);
+
+    cout << "Enter Phone Number: ";
+    getline(cin, phone);
+
+    cout << "Enter Address: ";
+    getline(cin, address);
+
+    int id = getCustomerId();
+
+    Customer c(id, name, phone, address);
+
+    customers.push_back(c);
+
+    saveCustomers();
+
+    cout << "\nCustomer Registered Successfully!\n";
+    cout << "Customer ID: " << id << endl;
+}
+
+
+// ================= SHOW CUSTOMERS =================
+
+void showCustomers() {
+
+    if (customers.size() == 0) {
+
+        cout << "\nNo Customers Registered.\n";
+        return;
+    }
+
+    cout << "\n========== CUSTOMERS ==========\n";
+
+    for (auto c : customers) {
+
+        cout << "\nCustomer ID : " << c.id;
+        cout << "\nName        : " << c.name;
+        cout << "\nPhone       : " << c.phone;
+        cout << "\nAddress     : " << c.address;
+        cout << "\n-------------------------------";
+    }
+
+    cout << endl;
+}
+
+
+// ================= CALCULATE CHARGES =================
+
+double calculateCharges(double weight, string deliveryType) {
+
+    double charges = 50;
+
+    if (weight <= 1) {
+
+        charges = 50;
+    }
+
+    else if (weight <= 5) {
+
+        charges = 100;
+    }
+
+    else {
+
+        charges = 100 + ((weight - 5) * 20);
+    }
+
+
+    // Express delivery costs 50% extra
+
+    if (deliveryType == "Express") {
+
+        charges = charges + (charges * 0.50);
+    }
+
+    return charges;
+}
+
+
+// ================= BOOK PARCEL =================
+
+void bookParcel() {
+
+    if (customers.size() == 0) {
+
+        cout << "\nPlease register a customer first.\n";
+        return;
+    }
+
+    int customerId;
+
+    cout << "\nEnter Customer ID: ";
+    cin >> customerId;
+
+    bool found = false;
+    Customer customer;
+
+    for (auto c : customers) {
+
+        if (c.id == customerId) {
+
+            found = true;
+            customer = c;
+            break;
+        }
+    }
+
+    if (!found) {
+
+        cout << "\nCustomer not found!\n";
+        return;
+    }
+
+
+    string receiver;
+    string source;
+    string destination;
+
+    double weight;
+
+    int choice;
+
+    cin.ignore();
+
+    cout << "\nEnter Receiver Name: ";
+    getline(cin, receiver);
+
+    cout << "Enter Source: ";
+    getline(cin, source);
+
+    cout << "Enter Destination: ";
+    getline(cin, destination);
+
+    cout << "Enter Parcel Weight (kg): ";
+    cin >> weight;
+
+    cout << "\n1. Normal Delivery";
+    cout << "\n2. Express Delivery";
+
+    cout << "\nEnter Choice: ";
+    cin >> choice;
+
+    string deliveryType;
+
+    if (choice == 2)
+        deliveryType = "Express";
+
+    else
+        deliveryType = "Normal";
+
+
+    double charges = calculateCharges(weight, deliveryType);
+
+    string trackingId = getTrackingId();
+
+    Parcel p(
+        trackingId,
+        customerId,
+        customer.name,
+        receiver,
+        source,
+        destination,
+        weight,
+        charges,
+        deliveryType,
+        "Booked"
+    );
+
+    parcels.push_back(p);
+
+    saveParcels();
+
+    cout << "\n========== PARCEL BOOKED ==========\n";
+
+    cout << "Tracking ID : " << trackingId << endl;
+    cout << "Sender      : " << customer.name << endl;
+    cout << "Receiver    : " << receiver << endl;
+    cout << "Weight      : " << weight << " kg" << endl;
+    cout << "Delivery    : " << deliveryType << endl;
+    cout << "Charges     : Rs. " << charges << endl;
+    cout << "Status      : Booked" << endl;
+}
+
+
+// ================= SEARCH PARCEL =================
+
+int searchParcel(string trackingId) {
+
+    for (int i = 0; i < parcels.size(); i++) {
+
+        if (parcels[i].trackingId == trackingId) {
+
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+
+// ================= TRACK SHIPMENT =================
+
+void trackShipment() {
+
+    string trackingId;
+
+    cout << "\nEnter Tracking ID: ";
+    cin >> trackingId;
+
+    int index = searchParcel(trackingId);
+
+    if (index == -1) {
+
+        cout << "\nParcel not found!\n";
+        return;
+    }
+
+    Parcel p = parcels[index];
+
+    cout << "\n========== SHIPMENT DETAILS ==========\n";
+
+    cout << "Tracking ID : " << p.trackingId << endl;
+    cout << "Sender      : " << p.sender << endl;
+    cout << "Receiver    : " << p.receiver << endl;
+    cout << "Source      : " << p.source << endl;
+    cout << "Destination : " << p.destination << endl;
+    cout << "Weight      : " << p.weight << " kg" << endl;
+    cout << "Delivery    : " << p.deliveryType << endl;
+    cout << "Charges     : Rs. " << p.charges << endl;
+    cout << "Status      : " << p.status << endl;
+}
+
+
+// ================= UPDATE STATUS =================
+
+void updateStatus() {
+
+    string trackingId;
+
+    cout << "\nEnter Tracking ID: ";
+    cin >> trackingId;
+
+    int index = searchParcel(trackingId);
+
+    if (index == -1) {
+
+        cout << "\nParcel not found!\n";
+        return;
+    }
+
+
+    int choice;
+
+    cout << "\n========== UPDATE STATUS ==========\n";
+
+    cout << "1. Booked";
+    cout << "\n2. Picked Up";
+    cout << "\n3. In Transit";
+    cout << "\n4. Out for Delivery";
+    cout << "\n5. Delivered";
+    cout << "\n6. Cancelled";
+
+    cout << "\n\nEnter Choice: ";
+    cin >> choice;
+
+
+    switch (choice) {
+
+        case 1:
+            parcels[index].status = "Booked";
+            break;
+
+        case 2:
+            parcels[index].status = "Picked Up";
+            break;
+
+        case 3:
+            parcels[index].status = "In Transit";
+            break;
+
+        case 4:
+            parcels[index].status = "Out for Delivery";
+            break;
+
+        case 5:
+            parcels[index].status = "Delivered";
+            break;
+
+        case 6:
+            parcels[index].status = "Cancelled";
+            break;
+
+        default:
+            cout << "\nInvalid Choice!\n";
+            return;
+    }
+
+
+    saveParcels();
+
+    cout << "\nStatus Updated Successfully!\n";
+}
+
+
+// ================= DELIVERY HISTORY =================
+
+void deliveryHistory() {
+
+    string trackingId;
+
+    cout << "\nEnter Tracking ID: ";
+    cin >> trackingId;
+
+    int index = searchParcel(trackingId);
+
+    if (index == -1) {
+
+        cout << "\nParcel not found!\n";
+        return;
+    }
+
+    Parcel p = parcels[index];
+
+    cout << "\n========== DELIVERY HISTORY ==========\n";
+
+    cout << "\nTracking ID : " << p.trackingId;
+
+    cout << "\nCurrent Status : "
+         << p.status << endl;
+
+    cout << "\nShipment Flow:\n";
+
+    cout << "Booked";
+    cout << " -> Picked Up";
+    cout << " -> In Transit";
+    cout << " -> Out for Delivery";
+    cout << " -> Delivered\n";
+}
+
+
+// ================= SHOW ALL PARCELS =================
+
+void showAllParcels() {
+
+    if (parcels.size() == 0) {
+
+        cout << "\nNo parcels available.\n";
+        return;
+    }
+
+    cout << "\n========== ALL PARCELS ==========\n";
+
+    for (auto p : parcels) {
+
+        cout << "\nTracking ID : " << p.trackingId;
+        cout << "\nSender      : " << p.sender;
+        cout << "\nReceiver    : " << p.receiver;
+        cout << "\nDestination : " << p.destination;
+        cout << "\nStatus      : " << p.status;
+        cout << "\nCharges     : Rs. " << p.charges;
+
+        cout << "\n-------------------------------";
+    }
+
+    cout << endl;
+}
+
+
+// ================= ADMIN DASHBOARD =================
+
+void adminDashboard() {
+
+    int delivered = 0;
+    int inTransit = 0;
+    int booked = 0;
+    int cancelled = 0;
+
+    double totalRevenue = 0;
+
+
+    for (auto p : parcels) {
+
+        totalRevenue += p.charges;
+
+        if (p.status == "Delivered")
+            delivered++;
+
+        else if (p.status == "In Transit")
+            inTransit++;
+
+        else if (p.status == "Booked")
+            booked++;
+
+        else if (p.status == "Cancelled")
+            cancelled++;
+    }
+
+
+    cout << "\n========== ADMIN DASHBOARD ==========\n";
+
+    cout << "\nTotal Customers : "
+         << customers.size();
+
+    cout << "\nTotal Parcels   : "
+         << parcels.size();
+
+    cout << "\nBooked Parcels  : "
+         << booked;
+
+    cout << "\nIn Transit      : "
+         << inTransit;
+
+    cout << "\nDelivered       : "
+         << delivered;
+
+    cout << "\nCancelled       : "
+         << cancelled;
+
+    cout << "\nTotal Revenue   : Rs. "
+         << totalRevenue;
+
+    cout << "\n=====================================\n";
+}
+
+
+// ================= MAIN =================
+
+int main() {
+
+    loadCustomers();
+    loadParcels();
+
+
+    int choice;
+
+    do {
+
+        cout << "\n\n";
+        cout << "========================================\n";
+        cout << "       COURIER & PARCEL SYSTEM\n";
+        cout << "========================================\n";
+
+        cout << "\n1. Register Customer";
+        cout << "\n2. Show Customers";
+        cout << "\n3. Book Parcel";
+        cout << "\n4. Track Shipment";
+        cout << "\n5. Update Delivery Status";
+        cout << "\n6. Search Parcel";
+        cout << "\n7. Delivery History";
+        cout << "\n8. Show All Parcels";
+        cout << "\n9. Admin Dashboard";
+        cout << "\n10. Exit";
+
+        cout << "\n\nEnter Choice: ";
+        cin >> choice;
+
+
+        switch (choice) {
+
+            case 1:
+                registerCustomer();
+                break;
+
+            case 2:
+                showCustomers();
+                break;
+
+            case 3:
+                bookParcel();
+                break;
+
+            case 4:
+                trackShipment();
+                break;
+
+            case 5:
+                updateStatus();
+                break;
+
+            case 6: {
+
+                string trackingId;
+
+                cout << "\nEnter Tracking ID: ";
+                cin >> trackingId;
+
+                int index = searchParcel(trackingId);
+
+                if (index == -1) {
+
+                    cout << "\nParcel not found!\n";
+                }
+
+                else {
+
+                    cout << "\nParcel Found!\n";
+
+                    cout << "Tracking ID : "
+                         << parcels[index].trackingId;
+
+                    cout << "\nSender      : "
+                         << parcels[index].sender;
+
+                    cout << "\nReceiver    : "
+                         << parcels[index].receiver;
+
+                    cout << "\nStatus      : "
+                         << parcels[index].status;
+
+                    cout << endl;
+                }
+
+                break;
+            }
+
+            case 7:
+                deliveryHistory();
+                break;
+
+            case 8:
+                showAllParcels();
+                break;
+
+            case 9:
+                adminDashboard();
+                break;
+
+            case 10:
+                cout << "\nThank You for using the system!\n";
+                break;
+
+            default:
+                cout << "\nInvalid Choice!\n";
+        }
+
+    } while (choice != 10);
+
+
+    return 0;
+}
