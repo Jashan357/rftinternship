@@ -1,0 +1,455 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+struct Product
+{
+    int id;
+    string name;
+    int quantity;
+    double price;
+    int lowStock;
+};
+
+vector<Product> products;
+
+void loadProducts()
+{
+    ifstream file("inventory.txt");
+
+    Product p;
+
+    while (file >> p.id)
+    {
+        file.ignore();
+        getline(file, p.name);
+        file >> p.quantity;
+        file >> p.price;
+        file >> p.lowStock;
+
+        products.push_back(p);
+    }
+
+    file.close();
+}
+
+void saveProducts()
+{
+    ofstream file("inventory.txt");
+
+    for (auto p : products)
+    {
+        file << p.id << endl;
+        file << p.name << endl;
+        file << p.quantity << endl;
+        file << p.price << endl;
+        file << p.lowStock << endl;
+    }
+
+    file.close();
+}
+
+int findProduct(int id)
+{
+    for (int i = 0; i < products.size(); i++)
+    {
+        if (products[i].id == id)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+void addProduct()
+{
+    Product p;
+
+    cout << "\nEnter Product ID: ";
+    cin >> p.id;
+
+    if (findProduct(p.id) != -1)
+    {
+        cout << "Product already exists!\n";
+        return;
+    }
+
+    cin.ignore();
+
+    cout << "Enter Product Name: ";
+    getline(cin, p.name);
+
+    cout << "Enter Quantity: ";
+    cin >> p.quantity;
+
+    cout << "Enter Price: ";
+    cin >> p.price;
+
+    cout << "Enter Low Stock Limit: ";
+    cin >> p.lowStock;
+
+    products.push_back(p);
+
+    saveProducts();
+
+    cout << "\nProduct Added Successfully!\n";
+}
+
+void displayProduct(Product p)
+{
+    cout << "\n-----------------------------";
+    cout << "\nProduct ID     : " << p.id;
+    cout << "\nProduct Name   : " << p.name;
+    cout << "\nQuantity       : " << p.quantity;
+    cout << "\nPrice          : " << p.price;
+    cout << "\nLow Stock Limit: " << p.lowStock;
+    cout << "\n-----------------------------\n";
+}
+
+void searchInventory()
+{
+    int id;
+
+    cout << "\nEnter Product ID to Search: ";
+    cin >> id;
+
+    int index = findProduct(id);
+
+    if (index == -1)
+    {
+        cout << "\nProduct Not Found!\n";
+        return;
+    }
+
+    displayProduct(products[index]);
+}
+
+void updateStock()
+{
+    int id;
+    int quantity;
+    int choice;
+
+    cout << "\nEnter Product ID: ";
+    cin >> id;
+
+    int index = findProduct(id);
+
+    if (index == -1)
+    {
+        cout << "\nProduct Not Found!\n";
+        return;
+    }
+
+    cout << "\n1. Add Stock";
+    cout << "\n2. Remove Stock";
+    cout << "\nEnter Choice: ";
+    cin >> choice;
+
+    cout << "Enter Quantity: ";
+    cin >> quantity;
+
+    if (choice == 1)
+    {
+        products[index].quantity += quantity;
+
+        cout << "\nStock Added Successfully!\n";
+    }
+    else if (choice == 2)
+    {
+        if (quantity > products[index].quantity)
+        {
+            cout << "\nNot Enough Stock Available!\n";
+            return;
+        }
+
+        products[index].quantity -= quantity;
+
+        cout << "\nStock Removed Successfully!\n";
+    }
+    else
+    {
+        cout << "\nInvalid Choice!\n";
+        return;
+    }
+
+    saveProducts();
+}
+
+void dispatchOrder()
+{
+    int id;
+    int quantity;
+
+    cout << "\nEnter Product ID: ";
+    cin >> id;
+
+    int index = findProduct(id);
+
+    if (index == -1)
+    {
+        cout << "\nProduct Not Found!\n";
+        return;
+    }
+
+    cout << "Enter Dispatch Quantity: ";
+    cin >> quantity;
+
+    if (quantity > products[index].quantity)
+    {
+        cout << "\nInsufficient Stock!\n";
+        return;
+    }
+
+    products[index].quantity -= quantity;
+
+    saveProducts();
+
+    cout << "\nOrder Dispatched Successfully!\n";
+}
+
+void receiveShipment()
+{
+    int id;
+    int quantity;
+
+    cout << "\nEnter Product ID: ";
+    cin >> id;
+
+    int index = findProduct(id);
+
+    if (index == -1)
+    {
+        cout << "\nProduct Not Found!\n";
+        return;
+    }
+
+    cout << "Enter Received Quantity: ";
+    cin >> quantity;
+
+    if (quantity <= 0)
+    {
+        cout << "\nInvalid Quantity!\n";
+        return;
+    }
+
+    products[index].quantity += quantity;
+
+    saveProducts();
+
+    cout << "\nShipment Received Successfully!\n";
+}
+
+void inventoryReport()
+{
+    if (products.empty())
+    {
+        cout << "\nInventory is Empty!\n";
+        return;
+    }
+
+    double totalValue = 0;
+
+    cout << "\n\n========== INVENTORY REPORT ==========\n";
+
+    cout << left << setw(10) << "ID"
+         << setw(25) << "NAME"
+         << setw(12) << "STOCK"
+         << setw(12) << "PRICE"
+         << setw(15) << "VALUE" << endl;
+
+    cout << "-------------------------------------------------------------\n";
+
+    for (auto p : products)
+    {
+        double value = p.quantity * p.price;
+
+        totalValue += value;
+
+        cout << left << setw(10) << p.id
+             << setw(25) << p.name
+             << setw(12) << p.quantity
+             << setw(12) << p.price
+             << setw(15) << value << endl;
+    }
+
+    cout << "-------------------------------------------------------------\n";
+
+    cout << "Total Inventory Value: " << totalValue << endl;
+}
+
+void lowStockAlert()
+{
+    bool found = false;
+
+    cout << "\n========== LOW STOCK ALERT ==========\n";
+
+    for (auto p : products)
+    {
+        if (p.quantity <= p.lowStock)
+        {
+            found = true;
+
+            cout << "\nProduct ID : " << p.id;
+            cout << "\nProduct    : " << p.name;
+            cout << "\nStock      : " << p.quantity;
+            cout << "\nLimit      : " << p.lowStock << endl;
+        }
+    }
+
+    if (!found)
+    {
+        cout << "\nNo Low Stock Products!\n";
+    }
+}
+
+bool adminLogin()
+{
+    string username;
+    string password;
+
+    cout << "\n========== ADMIN LOGIN ==========\n";
+
+    cout << "Username: ";
+    cin >> username;
+
+    cout << "Password: ";
+    cin >> password;
+
+    if (username == "admin" && password == "1234")
+    {
+        cout << "\nLogin Successful!\n";
+        return true;
+    }
+
+    cout << "\nInvalid Username or Password!\n";
+
+    return false;
+}
+
+void monthlyInventorySummary()
+{
+    double totalValue = 0;
+    int totalItems = 0;
+
+    for (auto p : products)
+    {
+        totalItems += p.quantity;
+        totalValue += p.quantity * p.price;
+    }
+
+    cout << "\n========== MONTHLY INVENTORY SUMMARY ==========\n";
+
+    cout << "\nTotal Products : " << products.size();
+    cout << "\nTotal Items    : " << totalItems;
+    cout << "\nInventory Value: " << totalValue << endl;
+
+    ofstream file("monthly_summary.txt", ios::app);
+
+    file << "\n========== MONTHLY INVENTORY SUMMARY ==========\n";
+    file << "Total Products : " << products.size() << endl;
+    file << "Total Items    : " << totalItems << endl;
+    file << "Inventory Value: " << totalValue << endl;
+
+    file.close();
+
+    cout << "\nSummary Saved to monthly_summary.txt\n";
+}
+
+void showAllProducts()
+{
+    if (products.empty())
+    {
+        cout << "\nInventory is Empty!\n";
+        return;
+    }
+
+    cout << "\n========== ALL PRODUCTS ==========\n";
+
+    for (auto p : products)
+    {
+        displayProduct(p);
+    }
+}
+
+int main()
+{
+    loadProducts();
+
+    if (!adminLogin())
+    {
+        return 0;
+    }
+
+    int choice;
+
+    do
+    {
+        cout << "\n\n======================================";
+        cout << "\n       WAREHOUSE INVENTORY SYSTEM";
+        cout << "\n======================================";
+
+        cout << "\n1. Add Product";
+        cout << "\n2. Update Stock";
+        cout << "\n3. Search Inventory";
+        cout << "\n4. Dispatch Order";
+        cout << "\n5. Receive Shipment";
+        cout << "\n6. Generate Inventory Report";
+        cout << "\n7. Show All Products";
+        cout << "\n8. Low Stock Alerts";
+        cout << "\n9. Monthly Inventory Summary";
+        cout << "\n10. Exit";
+
+        cout << "\n\nEnter Your Choice: ";
+        cin >> choice;
+
+        switch (choice)
+        {
+        case 1:
+            addProduct();
+            break;
+
+        case 2:
+            updateStock();
+            break;
+
+        case 3:
+            searchInventory();
+            break;
+
+        case 4:
+            dispatchOrder();
+            break;
+
+        case 5:
+            receiveShipment();
+            break;
+
+        case 6:
+            inventoryReport();
+            break;
+
+        case 7:
+            showAllProducts();
+            break;
+
+        case 8:
+            lowStockAlert();
+            break;
+
+        case 9:
+            monthlyInventorySummary();
+            break;
+
+        case 10:
+            cout << "\nThank You for Using Warehouse Inventory System!\n";
+            break;
+
+        default:
+            cout << "\nInvalid Choice! Please Try Again.\n";
+        }
+
+    } while (choice != 10);
+
+    return 0;
+}
