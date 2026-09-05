@@ -1,0 +1,1071 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+// ======================= HUFFMAN NODE =======================
+
+struct Node
+{
+    unsigned char ch;
+    long long freq;
+
+    Node *left;
+    Node *right;
+
+    Node(unsigned char c, long long f)
+    {
+        ch = c;
+        freq = f;
+
+        left = NULL;
+        right = NULL;
+    }
+
+    Node(long long f, Node *l, Node *r)
+    {
+        ch = 0;
+        freq = f;
+
+        left = l;
+        right = r;
+    }
+};
+
+
+// ======================= COMPARATOR =======================
+
+struct Compare
+{
+    bool operator()(Node *a, Node *b)
+    {
+        return a->freq > b->freq;
+    }
+};
+
+
+// ======================= CHECK LEAF =======================
+
+bool isLeaf(Node *root)
+{
+    return root != NULL &&
+           root->left == NULL &&
+           root->right == NULL;
+}
+
+
+// ======================= DELETE TREE =======================
+
+void deleteTree(Node *root)
+{
+    if(root == NULL)
+        return;
+
+    deleteTree(root->left);
+    deleteTree(root->right);
+
+    delete root;
+}
+
+
+// ======================= CHARACTER FREQUENCY =======================
+
+void analyzeFrequency(string fileName,
+                      vector<unsigned long long> &freq,
+                      unsigned long long &fileSize)
+{
+    ifstream file(fileName, ios::binary);
+
+    if(!file)
+    {
+        cout << "\nError: Cannot open input file!\n";
+        return;
+    }
+
+    unsigned char ch;
+
+    fileSize = 0;
+
+    while(file.read((char*)&ch, sizeof(ch)))
+    {
+        freq[ch]++;
+        fileSize++;
+    }
+
+    file.close();
+}
+
+
+// ======================= DISPLAY FREQUENCY =======================
+
+void displayFrequency(vector<unsigned long long> &freq)
+{
+    cout << "\n========================================\n";
+    cout << "       CHARACTER FREQUENCY TABLE\n";
+    cout << "========================================\n";
+
+    bool found = false;
+
+    for(int i = 0; i < 256; i++)
+    {
+        if(freq[i] > 0)
+        {
+            found = true;
+
+            if(i >= 32 && i <= 126)
+            {
+                cout << "'" << (char)i << "'"
+                     << " -> "
+                     << freq[i] << endl;
+            }
+            else
+            {
+                cout << "ASCII " << i
+                     << " -> "
+                     << freq[i] << endl;
+            }
+        }
+    }
+
+    if(!found)
+        cout << "File is Empty.\n";
+
+    cout << "========================================\n";
+}
+
+
+// ======================= BUILD HUFFMAN TREE =======================
+
+Node* buildTree(vector<unsigned long long> &freq)
+{
+    priority_queue<Node*,
+                   vector<Node*>,
+                   Compare> pq;
+
+    for(int i = 0; i < 256; i++)
+    {
+        if(freq[i] > 0)
+        {
+            Node *newNode =
+                new Node((unsigned char)i, freq[i]);
+
+            pq.push(newNode);
+        }
+    }
+
+    if(pq.empty())
+        return NULL;
+
+    // Special case:
+    // Only one unique character
+    if(pq.size() == 1)
+    {
+        Node *onlyNode = pq.top();
+        pq.pop();
+
+        Node *root =
+            new Node(onlyNode->freq,
+                     onlyNode,
+                     NULL);
+
+        return root;
+    }
+
+    while(pq.size() > 1)
+    {
+        Node *left = pq.top();
+        pq.pop();
+
+        Node *right = pq.top();
+        pq.pop();
+
+        Node *parent =
+            new Node(left->freq + right->freq,
+                     left,
+                     right);
+
+        pq.push(parent);
+    }
+
+    return pq.top();
+}
+
+
+// ======================= GENERATE HUFFMAN CODES =======================
+
+void generateCodes(Node *root,
+                   string code,
+                   vector<string> &codes)
+{
+    if(root == NULL)
+        return;
+
+    if(isLeaf(root))
+    {
+        // If only one unique character exists
+        if(code == "")
+            code = "0";
+
+        codes[root->ch] = code;
+
+        return;
+    }
+
+    generateCodes(root->left,
+                  code + "0",
+                  codes);
+
+    generateCodes(root->right,
+                  code + "1",
+                  codes);
+}
+
+
+// ======================= PRINT HUFFMAN CODES =======================
+
+void displayCodes(vector<string> &codes,
+                  vector<unsigned long long> &freq)
+{
+    cout << "\n========================================\n";
+    cout << "           HUFFMAN CODES\n";
+    cout << "========================================\n";
+
+    for(int i = 0; i < 256; i++)
+    {
+        if(freq[i] > 0)
+        {
+            if(i >= 32 && i <= 126)
+            {
+                cout << "'" << (char)i << "'"
+                     << " -> "
+                     << codes[i] << endl;
+            }
+            else
+            {
+                cout << "ASCII " << i
+                     << " -> "
+                     << codes[i] << endl;
+            }
+        }
+    }
+
+    cout << "========================================\n";
+}
+
+
+// ======================= WRITE INTEGER =======================
+
+void writeLongLong(ofstream &file,
+                   unsigned long long value)
+{
+    file.write((char*)&value,
+               sizeof(value));
+}
+
+
+// ======================= READ INTEGER =======================
+
+bool readLongLong(ifstream &file,
+                  unsigned long long &value)
+{
+    return file.read((char*)&value,
+                     sizeof(value));
+}
+
+
+// ======================= COMPRESS FILE =======================
+
+bool compressFile(string inputFile,
+                  string outputFile)
+{
+    vector<unsigned long long> freq(256, 0);
+
+    unsigned long long originalSize = 0;
+
+    // Read and analyze input file
+    analyzeFrequency(inputFile,
+                     freq,
+                     originalSize);
+
+    ifstream test(inputFile, ios::binary);
+
+    if(!test)
+    {
+        cout << "\nError: Input file does not exist or cannot be opened!\n";
+        return false;
+    }
+
+    test.close();
+
+    if(originalSize == 0)
+    {
+        cout << "\nError: Input file is empty!\n";
+        return false;
+    }
+
+    // Build Huffman tree
+    Node *root = buildTree(freq);
+
+    if(root == NULL)
+    {
+        cout << "\nError: Could not build Huffman tree!\n";
+        return false;
+    }
+
+    // Generate codes
+    vector<string> codes(256);
+
+    generateCodes(root,
+                  "",
+                  codes);
+
+    // Open files
+    ifstream input(inputFile,
+                   ios::binary);
+
+    ofstream output(outputFile,
+                    ios::binary);
+
+    if(!input || !output)
+    {
+        cout << "\nError: Cannot create compressed file!\n";
+
+        deleteTree(root);
+
+        return false;
+    }
+
+    // ================= HEADER =================
+
+    // Write original file size
+    writeLongLong(output,
+                  originalSize);
+
+    // Write frequency table
+    for(int i = 0; i < 256; i++)
+    {
+        writeLongLong(output,
+                      freq[i]);
+    }
+
+
+    // ================= DATA =================
+
+    unsigned char buffer = 0;
+    int bitCount = 0;
+
+    unsigned char ch;
+
+    while(input.read((char*)&ch,
+                     sizeof(ch)))
+    {
+        string code = codes[ch];
+
+        for(char bit : code)
+        {
+            buffer <<= 1;
+
+            if(bit == '1')
+                buffer |= 1;
+
+            bitCount++;
+
+            if(bitCount == 8)
+            {
+                output.write((char*)&buffer,
+                             sizeof(buffer));
+
+                buffer = 0;
+                bitCount = 0;
+            }
+        }
+    }
+
+    // Remaining bits
+    if(bitCount > 0)
+    {
+        buffer <<= (8 - bitCount);
+
+        output.write((char*)&buffer,
+                     sizeof(buffer));
+    }
+
+    input.close();
+    output.close();
+
+    deleteTree(root);
+
+    cout << "\n========================================\n";
+    cout << "         COMPRESSION SUCCESSFUL\n";
+    cout << "========================================\n";
+
+    cout << "Input File       : "
+         << inputFile << endl;
+
+    cout << "Compressed File  : "
+         << outputFile << endl;
+
+    cout << "Original Size    : "
+         << originalSize << " bytes\n";
+
+    ifstream compressed(outputFile,
+                        ios::binary | ios::ate);
+
+    unsigned long long compressedSize =
+        compressed.tellg();
+
+    compressed.close();
+
+    cout << "Compressed Size  : "
+         << compressedSize << " bytes\n";
+
+    if(originalSize > 0)
+    {
+        double ratio =
+            ((double)compressedSize /
+             originalSize) * 100;
+
+        cout << "Compressed Ratio : "
+             << fixed << setprecision(2)
+             << ratio << "%\n";
+
+        double saving =
+            100 - ratio;
+
+        cout << "Space Saved      : "
+             << fixed << setprecision(2)
+             << saving << "%\n";
+    }
+
+    cout << "========================================\n";
+
+    return true;
+}
+
+
+// ======================= DECOMPRESS FILE =======================
+
+bool decompressFile(string inputFile,
+                    string outputFile)
+{
+    ifstream input(inputFile,
+                   ios::binary);
+
+    if(!input)
+    {
+        cout << "\nError: Compressed file not found!\n";
+        return false;
+    }
+
+    // Read original size
+    unsigned long long originalSize;
+
+    if(!readLongLong(input,
+                     originalSize))
+    {
+        cout << "\nError: Invalid compressed file!\n";
+        return false;
+    }
+
+    // Read frequency table
+    vector<unsigned long long> freq(256);
+
+    for(int i = 0; i < 256; i++)
+    {
+        if(!readLongLong(input,
+                         freq[i]))
+        {
+            cout << "\nError: Corrupted compressed file!\n";
+            return false;
+        }
+    }
+
+    // Build tree
+    Node *root = buildTree(freq);
+
+    if(root == NULL)
+    {
+        cout << "\nError: Invalid Huffman tree!\n";
+        return false;
+    }
+
+    ofstream output(outputFile,
+                    ios::binary);
+
+    if(!output)
+    {
+        cout << "\nError: Cannot create output file!\n";
+
+        deleteTree(root);
+
+        return false;
+    }
+
+
+    // ================= SINGLE CHARACTER =================
+
+    if(isLeaf(root))
+    {
+        unsigned char ch = root->ch;
+
+        for(unsigned long long i = 0;
+            i < originalSize;
+            i++)
+        {
+            output.write((char*)&ch,
+                         sizeof(ch));
+        }
+
+        input.close();
+        output.close();
+
+        deleteTree(root);
+
+        cout << "\n========================================\n";
+        cout << "        DECOMPRESSION SUCCESSFUL\n";
+        cout << "========================================\n";
+
+        cout << "Output File : "
+             << outputFile << endl;
+
+        cout << "Original Size Restored : "
+             << originalSize << " bytes\n";
+
+        cout << "========================================\n";
+
+        return true;
+    }
+
+
+    // ================= NORMAL DECOMPRESSION =================
+
+    Node *current = root;
+
+    unsigned long long written = 0;
+
+    unsigned char buffer;
+
+    while(input.read((char*)&buffer,
+                     sizeof(buffer)) &&
+          written < originalSize)
+    {
+        for(int i = 7;
+            i >= 0 && written < originalSize;
+            i--)
+        {
+            int bit =
+                (buffer >> i) & 1;
+
+            if(bit == 0)
+                current = current->left;
+            else
+                current = current->right;
+
+            if(current == NULL)
+            {
+                cout << "\nError: Corrupted compressed file!\n";
+
+                input.close();
+                output.close();
+
+                deleteTree(root);
+
+                return false;
+            }
+
+            if(isLeaf(current))
+            {
+                output.write((char*)&current->ch,
+                             sizeof(current->ch));
+
+                written++;
+
+                current = root;
+            }
+        }
+    }
+
+    input.close();
+    output.close();
+
+    deleteTree(root);
+
+    if(written != originalSize)
+    {
+        cout << "\nError: Decompression failed!\n";
+        cout << "Expected : "
+             << originalSize << " bytes\n";
+
+        cout << "Got      : "
+             << written << " bytes\n";
+
+        return false;
+    }
+
+    cout << "\n========================================\n";
+    cout << "        DECOMPRESSION SUCCESSFUL\n";
+    cout << "========================================\n";
+
+    cout << "Compressed File : "
+         << inputFile << endl;
+
+    cout << "Output File     : "
+         << outputFile << endl;
+
+    cout << "Restored Size   : "
+         << written << " bytes\n";
+
+    cout << "========================================\n";
+
+    return true;
+}
+
+
+// ======================= VERIFY FILES =======================
+
+bool verifyFiles(string originalFile,
+                 string decompressedFile)
+{
+    ifstream file1(originalFile,
+                   ios::binary);
+
+    ifstream file2(decompressedFile,
+                   ios::binary);
+
+    if(!file1 || !file2)
+    {
+        cout << "\nError: Cannot open files for verification!\n";
+        return false;
+    }
+
+    unsigned char ch1;
+    unsigned char ch2;
+
+    while(true)
+    {
+        bool read1 =
+            file1.read((char*)&ch1,
+                       sizeof(ch1));
+
+        bool read2 =
+            file2.read((char*)&ch2,
+                       sizeof(ch2));
+
+        if(read1 != read2)
+        {
+            file1.close();
+            file2.close();
+
+            return false;
+        }
+
+        if(!read1)
+            break;
+
+        if(ch1 != ch2)
+        {
+            file1.close();
+            file2.close();
+
+            return false;
+        }
+    }
+
+    file1.close();
+    file2.close();
+
+    return true;
+}
+
+
+// ======================= COMPARE FILE SIZE =======================
+
+void compareFileSize(string originalFile,
+                     string compressedFile)
+{
+    ifstream original(originalFile,
+                      ios::binary | ios::ate);
+
+    ifstream compressed(compressedFile,
+                        ios::binary | ios::ate);
+
+    if(!original || !compressed)
+    {
+        cout << "\nCannot compare file sizes!\n";
+        return;
+    }
+
+    unsigned long long originalSize =
+        original.tellg();
+
+    unsigned long long compressedSize =
+        compressed.tellg();
+
+    original.close();
+    compressed.close();
+
+    cout << "\n========================================\n";
+    cout << "             FILE SIZE REPORT\n";
+    cout << "========================================\n";
+
+    cout << "Original File Size   : "
+         << originalSize
+         << " bytes\n";
+
+    cout << "Compressed File Size : "
+         << compressedSize
+         << " bytes\n";
+
+    if(originalSize > 0)
+    {
+        double ratio =
+            ((double)compressedSize /
+             originalSize) * 100;
+
+        double saving =
+            100 - ratio;
+
+        cout << "Compression Ratio    : "
+             << fixed << setprecision(2)
+             << ratio << "%\n";
+
+        cout << "Space Saved          : "
+             << fixed << setprecision(2)
+             << saving << "%\n";
+    }
+
+    cout << "========================================\n";
+}
+
+
+// ======================= ANALYZE FILE =======================
+
+void analyzeFile()
+{
+    string fileName;
+
+    cout << "\nEnter File Name: ";
+    cin >> fileName;
+
+    vector<unsigned long long> freq(256, 0);
+
+    unsigned long long fileSize = 0;
+
+    ifstream file(fileName,
+                  ios::binary);
+
+    if(!file)
+    {
+        cout << "\nError: File does not exist!\n";
+        return;
+    }
+
+    file.close();
+
+    analyzeFrequency(fileName,
+                     freq,
+                     fileSize);
+
+    cout << "\nFile Size: "
+         << fileSize
+         << " bytes\n";
+
+    displayFrequency(freq);
+}
+
+
+// ======================= COMPRESS MENU =======================
+
+void compressMenu()
+{
+    string inputFile;
+    string outputFile;
+
+    cout << "\nEnter Input File: ";
+    cin >> inputFile;
+
+    cout << "Enter Compressed File Name: ";
+    cin >> outputFile;
+
+    compressFile(inputFile,
+                 outputFile);
+}
+
+
+// ======================= DECOMPRESS MENU =======================
+
+void decompressMenu()
+{
+    string compressedFile;
+    string outputFile;
+
+    cout << "\nEnter Compressed File: ";
+    cin >> compressedFile;
+
+    cout << "Enter Output File Name: ";
+    cin >> outputFile;
+
+    decompressFile(compressedFile,
+                   outputFile);
+}
+
+
+// ======================= VERIFY MENU =======================
+
+void verifyMenu()
+{
+    string originalFile;
+    string decompressedFile;
+
+    cout << "\nEnter Original File: ";
+    cin >> originalFile;
+
+    cout << "Enter Decompressed File: ";
+    cin >> decompressedFile;
+
+    if(verifyFiles(originalFile,
+                   decompressedFile))
+    {
+        cout << "\n========================================\n";
+        cout << "       VERIFICATION SUCCESSFUL\n";
+        cout << "========================================\n";
+
+        cout << "Original and Decompressed files\n";
+        cout << "contain exactly the same data.\n";
+
+        cout << "========================================\n";
+    }
+    else
+    {
+        cout << "\n========================================\n";
+        cout << "       VERIFICATION FAILED\n";
+        cout << "========================================\n";
+
+        cout << "Files are NOT identical.\n";
+
+        cout << "========================================\n";
+    }
+}
+
+
+// ======================= MAIN MENU =======================
+
+void menu()
+{
+    int choice;
+
+    do
+    {
+        cout << "\n\n";
+        cout << "========================================\n";
+        cout << "        FILE COMPRESSION UTILITY\n";
+        cout << "========================================\n";
+
+        cout << "1. Analyze Character Frequency\n";
+        cout << "2. Compress File\n";
+        cout << "3. Decompress File\n";
+        cout << "4. Verify Original Data\n";
+        cout << "5. Compare File Sizes\n";
+        cout << "6. Exit\n";
+
+        cout << "\nEnter Choice: ";
+        cin >> choice;
+
+        switch(choice)
+        {
+            case 1:
+                analyzeFile();
+                break;
+
+            case 2:
+                compressMenu();
+                break;
+
+            case 3:
+                decompressMenu();
+                break;
+
+            case 4:
+                verifyMenu();
+                break;
+
+            case 5:
+            {
+                string originalFile;
+                string compressedFile;
+
+                cout << "\nEnter Original File: ";
+                cin >> originalFile;
+
+                cout << "Enter Compressed File: ";
+                cin >> compressedFile;
+
+                compareFileSize(originalFile,
+                                compressedFile);
+
+                break;
+            }
+
+            case 6:
+                cout << "\nThank You!\n";
+                break;
+
+            default:
+                cout << "\nInvalid Choice!\n";
+        }
+
+    } while(choice != 6);
+}
+
+
+// ======================= COMMAND LINE =======================
+
+int main(int argc, char *argv[])
+{
+    /*
+        Command Line Usage:
+
+        Compress:
+        program.exe -c input.txt compressed.huf
+
+        Decompress:
+        program.exe -d compressed.huf output.txt
+
+        Analyze:
+        program.exe -a input.txt
+
+        Verify:
+        program.exe -v original.txt output.txt
+    */
+
+
+    if(argc > 1)
+    {
+        string command = argv[1];
+
+        // ================= COMPRESS =================
+
+        if(command == "-c")
+        {
+            if(argc != 4)
+            {
+                cout << "\nUsage:\n";
+                cout << "program.exe -c input.txt compressed.huf\n";
+
+                return 0;
+            }
+
+            compressFile(argv[2],
+                         argv[3]);
+
+            return 0;
+        }
+
+
+        // ================= DECOMPRESS =================
+
+        else if(command == "-d")
+        {
+            if(argc != 4)
+            {
+                cout << "\nUsage:\n";
+                cout << "program.exe -d compressed.huf output.txt\n";
+
+                return 0;
+            }
+
+            decompressFile(argv[2],
+                           argv[3]);
+
+            return 0;
+        }
+
+
+        // ================= ANALYZE =================
+
+        else if(command == "-a")
+        {
+            if(argc != 3)
+            {
+                cout << "\nUsage:\n";
+                cout << "program.exe -a input.txt\n";
+
+                return 0;
+            }
+
+            vector<unsigned long long> freq(256, 0);
+
+            unsigned long long fileSize = 0;
+
+            ifstream file(argv[2],
+                          ios::binary);
+
+            if(!file)
+            {
+                cout << "\nError: File does not exist!\n";
+                return 0;
+            }
+
+            file.close();
+
+            analyzeFrequency(argv[2],
+                             freq,
+                             fileSize);
+
+            cout << "\nFile Size: "
+                 << fileSize
+                 << " bytes\n";
+
+            displayFrequency(freq);
+
+            return 0;
+        }
+
+
+        // ================= VERIFY =================
+
+        else if(command == "-v")
+        {
+            if(argc != 4)
+            {
+                cout << "\nUsage:\n";
+                cout << "program.exe -v original.txt decompressed.txt\n";
+
+                return 0;
+            }
+
+            if(verifyFiles(argv[2],
+                           argv[3]))
+            {
+                cout << "\nVerification Successful!\n";
+            }
+            else
+            {
+                cout << "\nVerification Failed!\n";
+            }
+
+            return 0;
+        }
+
+
+        else
+        {
+            cout << "\nInvalid Command!\n";
+
+            cout << "\nAvailable Commands:\n";
+
+            cout << "-c  Compress File\n";
+            cout << "-d  Decompress File\n";
+            cout << "-a  Analyze File\n";
+            cout << "-v  Verify Files\n";
+
+            return 0;
+        }
+    }
+
+
+    // If no command-line arguments
+    // are provided, open normal menu.
+
+    menu();
+
+    return 0;
+}
