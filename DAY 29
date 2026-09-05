@@ -1,0 +1,986 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+// ======================= MENU ITEM STRUCTURE =======================
+
+struct MenuItem
+{
+    int itemId;
+    string name;
+    string category;
+    double price;
+};
+
+
+// ======================= ORDER STRUCTURE =======================
+
+struct Order
+{
+    int orderId;
+    string customerName;
+    int tableNo;
+    vector<int> itemIds;
+    vector<int> quantities;
+    double totalAmount;
+    string status;
+};
+
+
+// ======================= RESERVATION STRUCTURE =======================
+
+struct Reservation
+{
+    int reservationId;
+    string customerName;
+    string date;
+    string time;
+    int tableNo;
+    int guests;
+};
+
+
+// ======================= FILE NAMES =======================
+
+string menuFile = "menu.txt";
+string orderFile = "orders.txt";
+string reservationFile = "reservations.txt";
+
+
+// ======================= GLOBAL DATA =======================
+
+vector<MenuItem> menu;
+vector<Order> orders;
+vector<Reservation> reservations;
+
+int nextItemId = 1;
+int nextOrderId = 1001;
+int nextReservationId = 501;
+
+
+// ======================= FILE HANDLING =======================
+
+void saveMenu()
+{
+    ofstream file(menuFile);
+
+    for(auto m : menu)
+    {
+        file << m.itemId << "|"
+             << m.name << "|"
+             << m.category << "|"
+             << m.price << endl;
+    }
+
+    file.close();
+}
+
+
+void loadMenu()
+{
+    ifstream file(menuFile);
+
+    if(!file)
+        return;
+
+    menu.clear();
+
+    string line;
+
+    while(getline(file, line))
+    {
+        stringstream ss(line);
+        string temp;
+
+        MenuItem m;
+
+        getline(ss, temp, '|');
+        m.itemId = stoi(temp);
+
+        getline(ss, m.name, '|');
+
+        getline(ss, m.category, '|');
+
+        getline(ss, temp, '|');
+        m.price = stod(temp);
+
+        menu.push_back(m);
+
+        nextItemId = max(nextItemId, m.itemId + 1);
+    }
+
+    file.close();
+}
+
+
+void saveOrders()
+{
+    ofstream file(orderFile);
+
+    for(auto o : orders)
+    {
+        file << o.orderId << "|"
+             << o.customerName << "|"
+             << o.tableNo << "|";
+
+        // Store item IDs
+        for(int i = 0; i < o.itemIds.size(); i++)
+        {
+            file << o.itemIds[i];
+
+            if(i != o.itemIds.size() - 1)
+                file << ",";
+        }
+
+        file << "|";
+
+        // Store quantities
+        for(int i = 0; i < o.quantities.size(); i++)
+        {
+            file << o.quantities[i];
+
+            if(i != o.quantities.size() - 1)
+                file << ",";
+        }
+
+        file << "|"
+             << o.totalAmount << "|"
+             << o.status << endl;
+    }
+
+    file.close();
+}
+
+
+void loadOrders()
+{
+    ifstream file(orderFile);
+
+    if(!file)
+        return;
+
+    orders.clear();
+
+    string line;
+
+    while(getline(file, line))
+    {
+        stringstream ss(line);
+        string temp;
+
+        Order o;
+
+        getline(ss, temp, '|');
+        o.orderId = stoi(temp);
+
+        getline(ss, o.customerName, '|');
+
+        getline(ss, temp, '|');
+        o.tableNo = stoi(temp);
+
+        // Item IDs
+        getline(ss, temp, '|');
+
+        stringstream itemStream(temp);
+
+        while(getline(itemStream, temp, ','))
+        {
+            if(!temp.empty())
+                o.itemIds.push_back(stoi(temp));
+        }
+
+        // Quantities
+        getline(ss, temp, '|');
+
+        stringstream quantityStream(temp);
+
+        while(getline(quantityStream, temp, ','))
+        {
+            if(!temp.empty())
+                o.quantities.push_back(stoi(temp));
+        }
+
+        getline(ss, temp, '|');
+        o.totalAmount = stod(temp);
+
+        getline(ss, o.status, '|');
+
+        orders.push_back(o);
+
+        nextOrderId = max(nextOrderId, o.orderId + 1);
+    }
+
+    file.close();
+}
+
+
+void saveReservations()
+{
+    ofstream file(reservationFile);
+
+    for(auto r : reservations)
+    {
+        file << r.reservationId << "|"
+             << r.customerName << "|"
+             << r.date << "|"
+             << r.time << "|"
+             << r.tableNo << "|"
+             << r.guests << endl;
+    }
+
+    file.close();
+}
+
+
+void loadReservations()
+{
+    ifstream file(reservationFile);
+
+    if(!file)
+        return;
+
+    reservations.clear();
+
+    string line;
+
+    while(getline(file, line))
+    {
+        stringstream ss(line);
+        string temp;
+
+        Reservation r;
+
+        getline(ss, temp, '|');
+        r.reservationId = stoi(temp);
+
+        getline(ss, r.customerName, '|');
+
+        getline(ss, r.date, '|');
+
+        getline(ss, r.time, '|');
+
+        getline(ss, temp, '|');
+        r.tableNo = stoi(temp);
+
+        getline(ss, temp, '|');
+        r.guests = stoi(temp);
+
+        reservations.push_back(r);
+
+        nextReservationId =
+            max(nextReservationId, r.reservationId + 1);
+    }
+
+    file.close();
+}
+
+
+// ======================= FIND MENU ITEM =======================
+
+MenuItem* findItem(int id)
+{
+    for(auto &m : menu)
+    {
+        if(m.itemId == id)
+            return &m;
+    }
+
+    return NULL;
+}
+
+
+// ======================= FIND ORDER =======================
+
+Order* findOrder(int id)
+{
+    for(auto &o : orders)
+    {
+        if(o.orderId == id)
+            return &o;
+    }
+
+    return NULL;
+}
+
+
+// ======================= ADD MENU ITEM =======================
+
+void addMenuItem()
+{
+    MenuItem m;
+
+    m.itemId = nextItemId++;
+
+    cin.ignore();
+
+    cout << "\nEnter Item Name: ";
+    getline(cin, m.name);
+
+    cout << "Enter Category: ";
+    getline(cin, m.category);
+
+    cout << "Enter Price: ";
+    cin >> m.price;
+
+    menu.push_back(m);
+
+    saveMenu();
+
+    cout << "\nMenu Item Added Successfully!\n";
+    cout << "Item ID: " << m.itemId << endl;
+}
+
+
+// ======================= DISPLAY MENU =======================
+
+void displayMenu()
+{
+    if(menu.empty())
+    {
+        cout << "\nNo Menu Items Available.\n";
+        return;
+    }
+
+    cout << "\n========================================\n";
+    cout << "              RESTAURANT MENU\n";
+    cout << "========================================\n";
+
+    for(auto m : menu)
+    {
+        cout << "Item ID  : " << m.itemId << endl;
+        cout << "Name     : " << m.name << endl;
+        cout << "Category : " << m.category << endl;
+        cout << "Price    : Rs. " << m.price << endl;
+
+        cout << "----------------------------------------\n";
+    }
+}
+
+
+// ======================= PLACE ORDER =======================
+
+void placeOrder()
+{
+    if(menu.empty())
+    {
+        cout << "\nMenu is Empty!\n";
+        return;
+    }
+
+    Order o;
+
+    o.orderId = nextOrderId++;
+    o.status = "Pending";
+    o.totalAmount = 0;
+
+    cin.ignore();
+
+    cout << "\nEnter Customer Name: ";
+    getline(cin, o.customerName);
+
+    cout << "Enter Table Number: ";
+    cin >> o.tableNo;
+
+    displayMenu();
+
+    int n;
+
+    cout << "\nHow many different items do you want to order? ";
+    cin >> n;
+
+    if(n <= 0)
+    {
+        cout << "\nInvalid Number of Items!\n";
+        return;
+    }
+
+    for(int i = 0; i < n; i++)
+    {
+        int itemId;
+        int quantity;
+
+        cout << "\nEnter Item ID: ";
+        cin >> itemId;
+
+        MenuItem *item = findItem(itemId);
+
+        if(item == NULL)
+        {
+            cout << "Invalid Item ID!\n";
+            i--;
+            continue;
+        }
+
+        cout << "Enter Quantity: ";
+        cin >> quantity;
+
+        if(quantity <= 0)
+        {
+            cout << "Invalid Quantity!\n";
+            i--;
+            continue;
+        }
+
+        o.itemIds.push_back(itemId);
+        o.quantities.push_back(quantity);
+
+        o.totalAmount += item->price * quantity;
+    }
+
+    orders.push_back(o);
+
+    saveOrders();
+
+    cout << "\n====================================\n";
+    cout << "          ORDER PLACED!\n";
+    cout << "====================================\n";
+
+    cout << "Order ID : " << o.orderId << endl;
+    cout << "Customer : " << o.customerName << endl;
+    cout << "Table    : " << o.tableNo << endl;
+    cout << "Amount   : Rs. " << o.totalAmount << endl;
+    cout << "Status   : " << o.status << endl;
+
+    cout << "====================================\n";
+}
+
+
+// ======================= UPDATE ORDER STATUS =======================
+
+void updateOrderStatus()
+{
+    int orderId;
+
+    cout << "\nEnter Order ID: ";
+    cin >> orderId;
+
+    Order *o = findOrder(orderId);
+
+    if(o == NULL)
+    {
+        cout << "\nOrder Not Found!\n";
+        return;
+    }
+
+    cout << "\nCurrent Status: " << o->status << endl;
+
+    cout << "\n1. Pending\n";
+    cout << "2. Preparing\n";
+    cout << "3. Ready\n";
+    cout << "4. Served\n";
+    cout << "5. Cancelled\n";
+
+    int choice;
+
+    cout << "\nEnter New Status: ";
+    cin >> choice;
+
+    switch(choice)
+    {
+        case 1:
+            o->status = "Pending";
+            break;
+
+        case 2:
+            o->status = "Preparing";
+            break;
+
+        case 3:
+            o->status = "Ready";
+            break;
+
+        case 4:
+            o->status = "Served";
+            break;
+
+        case 5:
+            o->status = "Cancelled";
+            break;
+
+        default:
+            cout << "\nInvalid Choice!\n";
+            return;
+    }
+
+    saveOrders();
+
+    cout << "\nOrder Status Updated Successfully!\n";
+}
+
+
+// ======================= GENERATE BILL =======================
+
+void generateBill()
+{
+    int orderId;
+
+    cout << "\nEnter Order ID: ";
+    cin >> orderId;
+
+    Order *o = findOrder(orderId);
+
+    if(o == NULL)
+    {
+        cout << "\nOrder Not Found!\n";
+        return;
+    }
+
+    cout << "\n";
+    cout << "==========================================\n";
+    cout << "              RESTAURANT BILL\n";
+    cout << "==========================================\n";
+
+    cout << "Order ID : " << o->orderId << endl;
+    cout << "Customer : " << o->customerName << endl;
+    cout << "Table    : " << o->tableNo << endl;
+
+    cout << "------------------------------------------\n";
+
+    double subtotal = 0;
+
+    for(int i = 0; i < o->itemIds.size(); i++)
+    {
+        MenuItem *item = findItem(o->itemIds[i]);
+
+        if(item != NULL)
+        {
+            double itemTotal =
+                item->price * o->quantities[i];
+
+            cout << item->name
+                 << " x "
+                 << o->quantities[i]
+                 << " = Rs. "
+                 << itemTotal << endl;
+
+            subtotal += itemTotal;
+        }
+    }
+
+    double gst = subtotal * 0.05;
+    double finalAmount = subtotal + gst;
+
+    cout << "------------------------------------------\n";
+
+    cout << "Subtotal : Rs. " << subtotal << endl;
+    cout << "GST 5%   : Rs. " << gst << endl;
+    cout << "Total    : Rs. " << finalAmount << endl;
+
+    cout << "Status   : " << o->status << endl;
+
+    cout << "==========================================\n";
+}
+
+
+// ======================= SEARCH ORDER =======================
+
+void searchOrder()
+{
+    int orderId;
+
+    cout << "\nEnter Order ID: ";
+    cin >> orderId;
+
+    Order *o = findOrder(orderId);
+
+    if(o == NULL)
+    {
+        cout << "\nOrder Not Found!\n";
+        return;
+    }
+
+    cout << "\n========== ORDER DETAILS ==========\n";
+
+    cout << "Order ID : " << o->orderId << endl;
+    cout << "Customer : " << o->customerName << endl;
+    cout << "Table    : " << o->tableNo << endl;
+    cout << "Status   : " << o->status << endl;
+
+    cout << "\nOrdered Items:\n";
+
+    for(int i = 0; i < o->itemIds.size(); i++)
+    {
+        MenuItem *item = findItem(o->itemIds[i]);
+
+        if(item != NULL)
+        {
+            cout << item->name
+                 << " x "
+                 << o->quantities[i]
+                 << endl;
+        }
+    }
+
+    cout << "\nTotal Amount: Rs. "
+         << o->totalAmount << endl;
+
+    cout << "===================================\n";
+}
+
+
+// ======================= DISPLAY ORDERS =======================
+
+void displayOrders()
+{
+    if(orders.empty())
+    {
+        cout << "\nNo Orders Available.\n";
+        return;
+    }
+
+    cout << "\n========== ALL ORDERS ==========\n";
+
+    for(auto o : orders)
+    {
+        cout << "Order ID : " << o.orderId << endl;
+        cout << "Customer : " << o.customerName << endl;
+        cout << "Table    : " << o.tableNo << endl;
+        cout << "Amount   : Rs. " << o.totalAmount << endl;
+        cout << "Status   : " << o.status << endl;
+
+        cout << "-------------------------------\n";
+    }
+}
+
+
+// ======================= TABLE RESERVATION =======================
+
+void reserveTable()
+{
+    Reservation r;
+
+    r.reservationId = nextReservationId++;
+
+    cin.ignore();
+
+    cout << "\nEnter Customer Name: ";
+    getline(cin, r.customerName);
+
+    cout << "Enter Date (DD/MM/YYYY): ";
+    getline(cin, r.date);
+
+    cout << "Enter Time: ";
+    getline(cin, r.time);
+
+    cout << "Enter Table Number: ";
+    cin >> r.tableNo;
+
+    cout << "Enter Number of Guests: ";
+    cin >> r.guests;
+
+    // Check if table is already reserved
+    for(auto existing : reservations)
+    {
+        if(existing.date == r.date &&
+           existing.time == r.time &&
+           existing.tableNo == r.tableNo)
+        {
+            cout << "\nTable Already Reserved!\n";
+            return;
+        }
+    }
+
+    reservations.push_back(r);
+
+    saveReservations();
+
+    cout << "\n====================================\n";
+    cout << "       TABLE RESERVED SUCCESSFULLY\n";
+    cout << "====================================\n";
+
+    cout << "Reservation ID : "
+         << r.reservationId << endl;
+
+    cout << "Customer       : "
+         << r.customerName << endl;
+
+    cout << "Date           : "
+         << r.date << endl;
+
+    cout << "Time           : "
+         << r.time << endl;
+
+    cout << "Table          : "
+         << r.tableNo << endl;
+
+    cout << "Guests         : "
+         << r.guests << endl;
+
+    cout << "====================================\n";
+}
+
+
+// ======================= DISPLAY RESERVATIONS =======================
+
+void displayReservations()
+{
+    if(reservations.empty())
+    {
+        cout << "\nNo Reservations Available.\n";
+        return;
+    }
+
+    cout << "\n========== TABLE RESERVATIONS ==========\n";
+
+    for(auto r : reservations)
+    {
+        cout << "Reservation ID : "
+             << r.reservationId << endl;
+
+        cout << "Customer       : "
+             << r.customerName << endl;
+
+        cout << "Date           : "
+             << r.date << endl;
+
+        cout << "Time           : "
+             << r.time << endl;
+
+        cout << "Table          : "
+             << r.tableNo << endl;
+
+        cout << "Guests         : "
+             << r.guests << endl;
+
+        cout << "----------------------------------------\n";
+    }
+}
+
+
+// ======================= DAILY SALES REPORT =======================
+
+void dailySalesReport()
+{
+    double totalSales = 0;
+    int totalOrders = 0;
+
+    for(auto o : orders)
+    {
+        if(o.status != "Cancelled")
+        {
+            totalSales += o.totalAmount;
+            totalOrders++;
+        }
+    }
+
+    cout << "\n====================================\n";
+    cout << "          DAILY SALES REPORT\n";
+    cout << "====================================\n";
+
+    cout << "Total Orders : "
+         << totalOrders << endl;
+
+    cout << "Total Sales  : Rs. "
+         << totalSales << endl;
+
+    cout << "====================================\n";
+}
+
+
+// ======================= ADMIN LOGIN =======================
+
+bool adminLogin()
+{
+    string username;
+    string password;
+
+    cout << "\n========== ADMIN LOGIN ==========\n";
+
+    cout << "Username: ";
+    cin >> username;
+
+    cout << "Password: ";
+    cin >> password;
+
+    if(username == "admin" && password == "1234")
+    {
+        cout << "\nLogin Successful!\n";
+        return true;
+    }
+
+    cout << "\nInvalid Username or Password!\n";
+
+    return false;
+}
+
+
+// ======================= ADMIN MENU =======================
+
+void adminMenu()
+{
+    if(!adminLogin())
+        return;
+
+    int choice;
+
+    do
+    {
+        cout << "\n\n========== ADMIN PANEL ==========\n";
+
+        cout << "1. Add Menu Item\n";
+        cout << "2. Display Menu\n";
+        cout << "3. Display Orders\n";
+        cout << "4. Update Order Status\n";
+        cout << "5. Search Order\n";
+        cout << "6. Daily Sales Report\n";
+        cout << "7. Display Reservations\n";
+        cout << "8. Logout\n";
+
+        cout << "\nEnter Choice: ";
+        cin >> choice;
+
+        switch(choice)
+        {
+            case 1:
+                addMenuItem();
+                break;
+
+            case 2:
+                displayMenu();
+                break;
+
+            case 3:
+                displayOrders();
+                break;
+
+            case 4:
+                updateOrderStatus();
+                break;
+
+            case 5:
+                searchOrder();
+                break;
+
+            case 6:
+                dailySalesReport();
+                break;
+
+            case 7:
+                displayReservations();
+                break;
+
+            case 8:
+                cout << "\nLogged Out Successfully!\n";
+                break;
+
+            default:
+                cout << "\nInvalid Choice!\n";
+        }
+
+    } while(choice != 8);
+}
+
+
+// ======================= CUSTOMER MENU =======================
+
+void customerMenu()
+{
+    int choice;
+
+    do
+    {
+        cout << "\n\n";
+        cout << "====================================\n";
+        cout << "     RESTAURANT ORDER SYSTEM\n";
+        cout << "====================================\n";
+
+        cout << "1. Display Menu\n";
+        cout << "2. Place Order\n";
+        cout << "3. Update Order Status\n";
+        cout << "4. Generate Bill\n";
+        cout << "5. Search Order\n";
+        cout << "6. Reserve Table\n";
+        cout << "7. Display Reservations\n";
+        cout << "8. Back\n";
+
+        cout << "\nEnter Choice: ";
+        cin >> choice;
+
+        switch(choice)
+        {
+            case 1:
+                displayMenu();
+                break;
+
+            case 2:
+                placeOrder();
+                break;
+
+            case 3:
+                updateOrderStatus();
+                break;
+
+            case 4:
+                generateBill();
+                break;
+
+            case 5:
+                searchOrder();
+                break;
+
+            case 6:
+                reserveTable();
+                break;
+
+            case 7:
+                displayReservations();
+                break;
+
+            case 8:
+                cout << "\nGoing Back...\n";
+                break;
+
+            default:
+                cout << "\nInvalid Choice!\n";
+        }
+
+    } while(choice != 8);
+}
+
+
+// ======================= MAIN FUNCTION =======================
+
+int main()
+{
+    // Load all saved data
+    loadMenu();
+    loadOrders();
+    loadReservations();
+
+    int choice;
+
+    do
+    {
+        cout << "\n\n";
+        cout << "========================================\n";
+        cout << "     RESTAURANT MANAGEMENT SYSTEM\n";
+        cout << "========================================\n";
+
+        cout << "1. Customer Panel\n";
+        cout << "2. Admin Panel\n";
+        cout << "3. Exit\n";
+
+        cout << "\nEnter Choice: ";
+        cin >> choice;
+
+        switch(choice)
+        {
+            case 1:
+                customerMenu();
+                break;
+
+            case 2:
+                adminMenu();
+                break;
+
+            case 3:
+                cout << "\nThank You! Visit Again!\n";
+                break;
+
+            default:
+                cout << "\nInvalid Choice!\n";
+        }
+
+    } while(choice != 3);
+
+    return 0;
+}
