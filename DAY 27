@@ -1,0 +1,898 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+// ======================= MOVIE STRUCTURE =======================
+
+struct Movie
+{
+    int movieId;
+    string name;
+    string genre;
+    int duration;
+};
+
+
+// ======================= SHOW STRUCTURE =======================
+
+struct Show
+{
+    int showId;
+    int movieId;
+    string timing;
+    int totalSeats;
+    int availableSeats;
+};
+
+
+// ======================= BOOKING STRUCTURE =======================
+
+struct Booking
+{
+    int ticketId;
+    string customerName;
+    int movieId;
+    int showId;
+    int seatNo;
+    double amount;
+    string status;
+};
+
+
+// ======================= FILE NAMES =======================
+
+string movieFile = "movies.txt";
+string showFile = "shows.txt";
+string bookingFile = "bookings.txt";
+
+
+// ======================= GLOBAL DATA =======================
+
+vector<Movie> movies;
+vector<Show> shows;
+vector<Booking> bookings;
+
+int nextMovieId = 1;
+int nextShowId = 1;
+int nextTicketId = 1001;
+
+double ticketPrice = 200;
+
+
+// ======================= FILE HANDLING =======================
+
+void saveMovies()
+{
+    ofstream file(movieFile);
+
+    for(auto m : movies)
+    {
+        file << m.movieId << "|"
+             << m.name << "|"
+             << m.genre << "|"
+             << m.duration << endl;
+    }
+
+    file.close();
+}
+
+
+void loadMovies()
+{
+    ifstream file(movieFile);
+
+    if(!file)
+        return;
+
+    movies.clear();
+
+    string line;
+
+    while(getline(file, line))
+    {
+        stringstream ss(line);
+        string temp;
+
+        Movie m;
+
+        getline(ss, temp, '|');
+        m.movieId = stoi(temp);
+
+        getline(ss, m.name, '|');
+
+        getline(ss, m.genre, '|');
+
+        getline(ss, temp, '|');
+        m.duration = stoi(temp);
+
+        movies.push_back(m);
+
+        nextMovieId = max(nextMovieId, m.movieId + 1);
+    }
+
+    file.close();
+}
+
+
+void saveShows()
+{
+    ofstream file(showFile);
+
+    for(auto s : shows)
+    {
+        file << s.showId << "|"
+             << s.movieId << "|"
+             << s.timing << "|"
+             << s.totalSeats << "|"
+             << s.availableSeats << endl;
+    }
+
+    file.close();
+}
+
+
+void loadShows()
+{
+    ifstream file(showFile);
+
+    if(!file)
+        return;
+
+    shows.clear();
+
+    string line;
+
+    while(getline(file, line))
+    {
+        stringstream ss(line);
+        string temp;
+
+        Show s;
+
+        getline(ss, temp, '|');
+        s.showId = stoi(temp);
+
+        getline(ss, temp, '|');
+        s.movieId = stoi(temp);
+
+        getline(ss, s.timing, '|');
+
+        getline(ss, temp, '|');
+        s.totalSeats = stoi(temp);
+
+        getline(ss, temp, '|');
+        s.availableSeats = stoi(temp);
+
+        shows.push_back(s);
+
+        nextShowId = max(nextShowId, s.showId + 1);
+    }
+
+    file.close();
+}
+
+
+void saveBookings()
+{
+    ofstream file(bookingFile);
+
+    for(auto b : bookings)
+    {
+        file << b.ticketId << "|"
+             << b.customerName << "|"
+             << b.movieId << "|"
+             << b.showId << "|"
+             << b.seatNo << "|"
+             << b.amount << "|"
+             << b.status << endl;
+    }
+
+    file.close();
+}
+
+
+void loadBookings()
+{
+    ifstream file(bookingFile);
+
+    if(!file)
+        return;
+
+    bookings.clear();
+
+    string line;
+
+    while(getline(file, line))
+    {
+        stringstream ss(line);
+        string temp;
+
+        Booking b;
+
+        getline(ss, temp, '|');
+        b.ticketId = stoi(temp);
+
+        getline(ss, b.customerName, '|');
+
+        getline(ss, temp, '|');
+        b.movieId = stoi(temp);
+
+        getline(ss, temp, '|');
+        b.showId = stoi(temp);
+
+        getline(ss, temp, '|');
+        b.seatNo = stoi(temp);
+
+        getline(ss, temp, '|');
+        b.amount = stod(temp);
+
+        getline(ss, b.status, '|');
+
+        bookings.push_back(b);
+
+        nextTicketId = max(nextTicketId, b.ticketId + 1);
+    }
+
+    file.close();
+}
+
+
+// ======================= FIND MOVIE =======================
+
+Movie* findMovie(int id)
+{
+    for(auto &m : movies)
+    {
+        if(m.movieId == id)
+            return &m;
+    }
+
+    return NULL;
+}
+
+
+// ======================= FIND SHOW =======================
+
+Show* findShow(int id)
+{
+    for(auto &s : shows)
+    {
+        if(s.showId == id)
+            return &s;
+    }
+
+    return NULL;
+}
+
+
+// ======================= ADD MOVIE =======================
+
+void addMovie()
+{
+    Movie m;
+
+    m.movieId = nextMovieId++;
+
+    cin.ignore();
+
+    cout << "\nEnter Movie Name: ";
+    getline(cin, m.name);
+
+    cout << "Enter Genre: ";
+    getline(cin, m.genre);
+
+    cout << "Enter Duration (minutes): ";
+    cin >> m.duration;
+
+    movies.push_back(m);
+
+    saveMovies();
+
+    cout << "\nMovie Added Successfully!\n";
+    cout << "Movie ID: " << m.movieId << endl;
+}
+
+
+// ======================= DISPLAY MOVIES =======================
+
+void displayMovies()
+{
+    if(movies.empty())
+    {
+        cout << "\nNo Movies Available.\n";
+        return;
+    }
+
+    cout << "\n========== MOVIES ==========\n";
+
+    for(auto m : movies)
+    {
+        cout << "Movie ID  : " << m.movieId << endl;
+        cout << "Name      : " << m.name << endl;
+        cout << "Genre     : " << m.genre << endl;
+        cout << "Duration  : " << m.duration << " minutes\n";
+        cout << "----------------------------\n";
+    }
+}
+
+
+// ======================= ADD SHOW =======================
+
+void addShow()
+{
+    if(movies.empty())
+    {
+        cout << "\nPlease add a movie first.\n";
+        return;
+    }
+
+    displayMovies();
+
+    Show s;
+
+    s.showId = nextShowId++;
+
+    cout << "\nEnter Movie ID: ";
+    cin >> s.movieId;
+
+    if(findMovie(s.movieId) == NULL)
+    {
+        cout << "\nInvalid Movie ID!\n";
+        return;
+    }
+
+    cin.ignore();
+
+    cout << "Enter Show Timing: ";
+    getline(cin, s.timing);
+
+    cout << "Enter Total Seats: ";
+    cin >> s.totalSeats;
+
+    s.availableSeats = s.totalSeats;
+
+    shows.push_back(s);
+
+    saveShows();
+
+    cout << "\nShow Added Successfully!\n";
+    cout << "Show ID: " << s.showId << endl;
+}
+
+
+// ======================= DISPLAY SHOWS =======================
+
+void displayShows()
+{
+    if(shows.empty())
+    {
+        cout << "\nNo Shows Available.\n";
+        return;
+    }
+
+    cout << "\n========== SHOWS ==========\n";
+
+    for(auto s : shows)
+    {
+        Movie *m = findMovie(s.movieId);
+
+        cout << "Show ID       : " << s.showId << endl;
+
+        if(m != NULL)
+            cout << "Movie         : " << m->name << endl;
+
+        cout << "Timing        : " << s.timing << endl;
+        cout << "Total Seats   : " << s.totalSeats << endl;
+        cout << "Available     : " << s.availableSeats << endl;
+
+        cout << "---------------------------\n";
+    }
+}
+
+
+// ======================= SEAT AVAILABILITY =======================
+
+void seatAvailability()
+{
+    if(shows.empty())
+    {
+        cout << "\nNo Shows Available.\n";
+        return;
+    }
+
+    displayShows();
+
+    int showId;
+
+    cout << "\nEnter Show ID: ";
+    cin >> showId;
+
+    Show *s = findShow(showId);
+
+    if(s == NULL)
+    {
+        cout << "\nInvalid Show ID!\n";
+        return;
+    }
+
+    cout << "\n========== SEAT AVAILABILITY ==========\n";
+
+    for(int i = 1; i <= s->totalSeats; i++)
+    {
+        bool booked = false;
+
+        for(auto b : bookings)
+        {
+            if(b.showId == showId &&
+               b.seatNo == i &&
+               b.status == "Booked")
+            {
+                booked = true;
+                break;
+            }
+        }
+
+        if(booked)
+            cout << "[X] ";
+        else
+            cout << "[" << i << "] ";
+
+        if(i % 10 == 0)
+            cout << endl;
+    }
+
+    cout << "\n[X] = Booked\n";
+}
+
+
+// ======================= BOOK TICKET =======================
+
+void bookTicket()
+{
+    if(shows.empty())
+    {
+        cout << "\nNo Shows Available.\n";
+        return;
+    }
+
+    displayShows();
+
+    int showId;
+
+    cout << "\nEnter Show ID: ";
+    cin >> showId;
+
+    Show *s = findShow(showId);
+
+    if(s == NULL)
+    {
+        cout << "\nInvalid Show ID!\n";
+        return;
+    }
+
+    if(s->availableSeats <= 0)
+    {
+        cout << "\nHouse Full!\n";
+        return;
+    }
+
+    int seatNo;
+
+    seatAvailability();
+
+    cout << "\nEnter Seat Number: ";
+    cin >> seatNo;
+
+    if(seatNo < 1 || seatNo > s->totalSeats)
+    {
+        cout << "\nInvalid Seat Number!\n";
+        return;
+    }
+
+    for(auto b : bookings)
+    {
+        if(b.showId == showId &&
+           b.seatNo == seatNo &&
+           b.status == "Booked")
+        {
+            cout << "\nSeat Already Booked!\n";
+            return;
+        }
+    }
+
+    Booking b;
+
+    b.ticketId = nextTicketId++;
+
+    cin.ignore();
+
+    cout << "Enter Customer Name: ";
+    getline(cin, b.customerName);
+
+    b.movieId = s->movieId;
+    b.showId = showId;
+    b.seatNo = seatNo;
+    b.amount = ticketPrice;
+    b.status = "Booked";
+
+    bookings.push_back(b);
+
+    s->availableSeats--;
+
+    saveBookings();
+    saveShows();
+
+    cout << "\n=================================\n";
+    cout << "       TICKET BOOKED!\n";
+    cout << "=================================\n";
+    cout << "Ticket ID    : " << b.ticketId << endl;
+    cout << "Customer     : " << b.customerName << endl;
+
+    Movie *m = findMovie(b.movieId);
+
+    if(m != NULL)
+        cout << "Movie        : " << m->name << endl;
+
+    cout << "Show ID      : " << b.showId << endl;
+    cout << "Seat Number  : " << b.seatNo << endl;
+    cout << "Amount       : Rs. " << b.amount << endl;
+    cout << "Status       : " << b.status << endl;
+    cout << "=================================\n";
+}
+
+
+// ======================= CANCEL TICKET =======================
+
+void cancelTicket()
+{
+    int ticketId;
+
+    cout << "\nEnter Ticket ID: ";
+    cin >> ticketId;
+
+    for(auto &b : bookings)
+    {
+        if(b.ticketId == ticketId)
+        {
+            if(b.status == "Cancelled")
+            {
+                cout << "\nTicket Already Cancelled!\n";
+                return;
+            }
+
+            b.status = "Cancelled";
+
+            Show *s = findShow(b.showId);
+
+            if(s != NULL)
+                s->availableSeats++;
+
+            saveBookings();
+            saveShows();
+
+            cout << "\nTicket Cancelled Successfully!\n";
+            return;
+        }
+    }
+
+    cout << "\nTicket Not Found!\n";
+}
+
+
+// ======================= GENERATE RECEIPT =======================
+
+void generateReceipt()
+{
+    int ticketId;
+
+    cout << "\nEnter Ticket ID: ";
+    cin >> ticketId;
+
+    for(auto b : bookings)
+    {
+        if(b.ticketId == ticketId)
+        {
+            Movie *m = findMovie(b.movieId);
+            Show *s = findShow(b.showId);
+
+            cout << "\n";
+            cout << "========================================\n";
+            cout << "          MOVIE TICKET RECEIPT\n";
+            cout << "========================================\n";
+
+            cout << "Ticket ID     : " << b.ticketId << endl;
+            cout << "Customer Name : " << b.customerName << endl;
+
+            if(m != NULL)
+                cout << "Movie         : " << m->name << endl;
+
+            if(s != NULL)
+                cout << "Show Timing   : " << s->timing << endl;
+
+            cout << "Seat Number   : " << b.seatNo << endl;
+            cout << "Amount        : Rs. " << b.amount << endl;
+            cout << "Status        : " << b.status << endl;
+
+            cout << "========================================\n";
+
+            return;
+        }
+    }
+
+    cout << "\nTicket Not Found!\n";
+}
+
+
+// ======================= SEARCH BOOKING =======================
+
+void searchBooking()
+{
+    int ticketId;
+
+    cout << "\nEnter Ticket ID: ";
+    cin >> ticketId;
+
+    for(auto b : bookings)
+    {
+        if(b.ticketId == ticketId)
+        {
+            Movie *m = findMovie(b.movieId);
+            Show *s = findShow(b.showId);
+
+            cout << "\n========== BOOKING DETAILS ==========\n";
+
+            cout << "Ticket ID     : " << b.ticketId << endl;
+            cout << "Customer      : " << b.customerName << endl;
+
+            if(m != NULL)
+                cout << "Movie         : " << m->name << endl;
+
+            if(s != NULL)
+                cout << "Show Timing   : " << s->timing << endl;
+
+            cout << "Seat Number   : " << b.seatNo << endl;
+            cout << "Amount        : Rs. " << b.amount << endl;
+            cout << "Status        : " << b.status << endl;
+
+            cout << "======================================\n";
+
+            return;
+        }
+    }
+
+    cout << "\nBooking Not Found!\n";
+}
+
+
+// ======================= REVENUE REPORT =======================
+
+void revenueReport()
+{
+    double revenue = 0;
+    int totalBookings = 0;
+    int cancelled = 0;
+
+    for(auto b : bookings)
+    {
+        if(b.status == "Booked")
+        {
+            revenue += b.amount;
+            totalBookings++;
+        }
+        else if(b.status == "Cancelled")
+        {
+            cancelled++;
+        }
+    }
+
+    cout << "\n====================================\n";
+    cout << "          REVENUE REPORT\n";
+    cout << "====================================\n";
+
+    cout << "Total Bookings   : " << totalBookings << endl;
+    cout << "Cancelled Tickets: " << cancelled << endl;
+    cout << "Total Revenue    : Rs. " << revenue << endl;
+
+    cout << "====================================\n";
+}
+
+
+// ======================= ADMIN LOGIN =======================
+
+bool adminLogin()
+{
+    string username;
+    string password;
+
+    cout << "\n========== ADMIN LOGIN ==========\n";
+
+    cout << "Username: ";
+    cin >> username;
+
+    cout << "Password: ";
+    cin >> password;
+
+    if(username == "admin" && password == "1234")
+    {
+        cout << "\nLogin Successful!\n";
+        return true;
+    }
+
+    cout << "\nInvalid Username or Password!\n";
+
+    return false;
+}
+
+
+// ======================= ADMIN MENU =======================
+
+void adminMenu()
+{
+    if(!adminLogin())
+        return;
+
+    int choice;
+
+    do
+    {
+        cout << "\n\n========== ADMIN MENU ==========\n";
+
+        cout << "1. Add Movie\n";
+        cout << "2. Display Movies\n";
+        cout << "3. Add Show Timing\n";
+        cout << "4. Display Shows\n";
+        cout << "5. Revenue Report\n";
+        cout << "6. Search Booking\n";
+        cout << "7. Logout\n";
+
+        cout << "Enter Choice: ";
+        cin >> choice;
+
+        switch(choice)
+        {
+            case 1:
+                addMovie();
+                break;
+
+            case 2:
+                displayMovies();
+                break;
+
+            case 3:
+                addShow();
+                break;
+
+            case 4:
+                displayShows();
+                break;
+
+            case 5:
+                revenueReport();
+                break;
+
+            case 6:
+                searchBooking();
+                break;
+
+            case 7:
+                cout << "\nLogged Out Successfully!\n";
+                break;
+
+            default:
+                cout << "\nInvalid Choice!\n";
+        }
+
+    } while(choice != 7);
+}
+
+
+// ======================= USER MENU =======================
+
+void userMenu()
+{
+    int choice;
+
+    do
+    {
+        cout << "\n\n========== MOVIE TICKET BOOKING ==========\n";
+
+        cout << "1. Display Movies\n";
+        cout << "2. Display Shows\n";
+        cout << "3. Check Seat Availability\n";
+        cout << "4. Book Ticket\n";
+        cout << "5. Cancel Ticket\n";
+        cout << "6. Generate Ticket Receipt\n";
+        cout << "7. Search Booking\n";
+        cout << "8. Back\n";
+
+        cout << "\nEnter Choice: ";
+        cin >> choice;
+
+        switch(choice)
+        {
+            case 1:
+                displayMovies();
+                break;
+
+            case 2:
+                displayShows();
+                break;
+
+            case 3:
+                seatAvailability();
+                break;
+
+            case 4:
+                bookTicket();
+                break;
+
+            case 5:
+                cancelTicket();
+                break;
+
+            case 6:
+                generateReceipt();
+                break;
+
+            case 7:
+                searchBooking();
+                break;
+
+            case 8:
+                cout << "\nGoing Back...\n";
+                break;
+
+            default:
+                cout << "\nInvalid Choice!\n";
+        }
+
+    } while(choice != 8);
+}
+
+
+// ======================= MAIN FUNCTION =======================
+
+int main()
+{
+    // Load saved data
+    loadMovies();
+    loadShows();
+    loadBookings();
+
+    int choice;
+
+    do
+    {
+        cout << "\n\n";
+        cout << "========================================\n";
+        cout << "       MOVIE TICKET BOOKING SYSTEM\n";
+        cout << "========================================\n";
+
+        cout << "1. User Menu\n";
+        cout << "2. Admin Login\n";
+        cout << "3. Exit\n";
+
+        cout << "\nEnter Choice: ";
+        cin >> choice;
+
+        switch(choice)
+        {
+            case 1:
+                userMenu();
+                break;
+
+            case 2:
+                adminMenu();
+                break;
+
+            case 3:
+                cout << "\nThank You for Using the System!\n";
+                break;
+
+            default:
+                cout << "\nInvalid Choice!\n";
+        }
+
+    } while(choice != 3);
+
+    return 0;
+}
